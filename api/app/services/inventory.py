@@ -14,7 +14,7 @@ from app.models import (
     TransactionType,
     User,
 )
-from app.schemas import ReorderSuggestion
+from app.schemas import InventoryTransactionRead, ReorderSuggestion
 
 
 def get_or_create_inventory_item(db: Session, user: User, product: Product) -> InventoryItem:
@@ -166,3 +166,57 @@ def reorder_suggestions(db: Session, user: User, country_code: str | None = None
         )
     )
     return suggestions
+
+
+def serialize_transaction(transaction: InventoryTransaction) -> InventoryTransactionRead:
+    product = transaction.inventory_item.product
+    source = product.source
+    quantity = abs(transaction.quantity_delta)
+    txn_type = transaction.type.value if hasattr(transaction.type, "value") else str(transaction.type)
+    return InventoryTransactionRead(
+        id=transaction.id,
+        inventory_item_id=transaction.inventory_item_id,
+        product_id=product.id,
+        product_name=product.name,
+        unit=transaction.inventory_item.unit,
+        country_code=source.country_code if source else None,
+        type=txn_type,
+        quantity_delta=transaction.quantity_delta,
+        quantity=quantity,
+        note=transaction.note,
+        occurred_at=transaction.occurred_at,
+    )
+
+
+def list_transactions(
+    db: Session,
+    user: User,
+    *,
+    transaction_type: str | None = None,
+    country_code: str | None = None,
+    limit: int = 50,
+) -> list[InventoryTransactionRead]:
+    stmt = (
+        select(InventoryTransaction)
+        .join(InventoryTransaction.inventory_item)
+        .join(InventoryItem.product)
+        .join(Product.source)
+        .options(
+            joinedload(InventoryTransaction.inventory_item)
+            .joinedload(InventoryItem.product)
+            .joinedload(Product.source)
+        )
+        .where(InventoryItem.user_id == user.id)
+        .order_by(InventoryTransaction.occurred_at.desc())
+        .limit(max(1, min(limit, 200)))
+    )
+    if transaction_type:
+        stmt = stmt.where(InventoryTransaction.type == TransactionType(transaction_type))
+    else:
+        stmt = stmt.where(
+            InventoryTransaction.type.in_([TransactionType.CHECK_IN, TransactionType.CHECK_OUT])
+        )
+    if country_code:
+        stmt = stmt.where(ProductSource.country_code == country_code)
+    transactions = list(db.scalars(stmt).unique().all())
+    return [serialize_transaction(txn) for txn in transactions]

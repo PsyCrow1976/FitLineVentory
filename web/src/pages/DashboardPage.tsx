@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { api, InventoryItem } from "../api";
 import { useAuth } from "../auth";
+import TransactionHistory from "../components/TransactionHistory";
 import { countryLabel } from "../countries";
 import { formatSupplyDuration, usageLabel } from "../usage";
 
@@ -68,6 +69,13 @@ export default function DashboardPage() {
       </div>
 
       {error && <p className="rounded-lg bg-red-50 p-3 text-sm text-red-700">{error}</p>}
+
+      <TransactionHistory
+        title="Recent activity"
+        allCountries={showAllCountries}
+        limit={20}
+        emptyMessage="No check-ins or check-outs yet."
+      />
 
       {items.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-8 text-center">

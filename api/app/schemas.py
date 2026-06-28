@@ -141,12 +141,15 @@ class CheckOutRequest(BaseModel):
 
 
 class InventoryTransactionRead(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
-
     id: UUID
     inventory_item_id: UUID
+    product_id: UUID
+    product_name: str
+    unit: str
+    country_code: str | None = None
     type: str
     quantity_delta: Decimal
+    quantity: Decimal
     note: str | None
     occurred_at: datetime
 

@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session, joinedload
 
 from app.auth import get_current_user
 from app.database import get_db
-from app.models import InventoryItem, InventoryTransaction, Product, User
+from app.models import InventoryItem, InventoryTransaction, Product, TransactionType, User
 from app.schemas import (
     CheckInRequest,
     CheckOutRequest,
@@ -87,17 +87,47 @@ def list_transactions(
     db: Annotated[Session, Depends(get_db)],
     user: Annotated[User, Depends(get_current_user)],
     product_id: UUID | None = None,
-) -> list[InventoryTransaction]:
-    stmt = (
-        select(InventoryTransaction)
-        .join(InventoryItem)
-        .options(joinedload(InventoryTransaction.inventory_item).joinedload(InventoryItem.product))
-        .where(InventoryItem.user_id == user.id)
-        .order_by(InventoryTransaction.occurred_at.desc())
+    transaction_type: str | None = None,
+    country_code: str | None = None,
+    all_countries: bool = False,
+    limit: int = 50,
+) -> list[InventoryTransactionRead]:
+    filter_country = effective_country_code(
+        user.default_country_code,
+        country_code=country_code,
+        all_countries=all_countries,
     )
     if product_id:
-        stmt = stmt.where(InventoryItem.product_id == product_id)
-    return list(db.scalars(stmt).unique().all())
+        stmt = (
+            select(InventoryTransaction)
+            .join(InventoryTransaction.inventory_item)
+            .join(InventoryItem.product)
+            .join(Product.source)
+            .options(
+                joinedload(InventoryTransaction.inventory_item)
+                .joinedload(InventoryItem.product)
+                .joinedload(Product.source)
+            )
+            .where(InventoryItem.user_id == user.id, InventoryItem.product_id == product_id)
+            .order_by(InventoryTransaction.occurred_at.desc())
+            .limit(max(1, min(limit, 200)))
+        )
+        if transaction_type:
+            stmt = stmt.where(InventoryTransaction.type == TransactionType(transaction_type))
+        else:
+            stmt = stmt.where(
+                InventoryTransaction.type.in_([TransactionType.CHECK_IN, TransactionType.CHECK_OUT])
+            )
+        transactions = list(db.scalars(stmt).unique().all())
+        return [inventory_service.serialize_transaction(txn) for txn in transactions]
+
+    return inventory_service.list_transactions(
+        db,
+        user,
+        transaction_type=transaction_type,
+        country_code=filter_country,
+        limit=limit,
+    )
 
 
 @router.get("/reorder-suggestions", response_model=list[ReorderSuggestion])

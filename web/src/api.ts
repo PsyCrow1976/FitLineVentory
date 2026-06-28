@@ -60,6 +60,20 @@ export type InventoryItem = {
   estimated_supply_days: number;
 };
 
+export type InventoryTransaction = {
+  id: string;
+  inventory_item_id: string;
+  product_id: string;
+  product_name: string;
+  unit: string;
+  country_code: string | null;
+  type: "check_in" | "check_out" | string;
+  quantity_delta: string;
+  quantity: string;
+  note: string | null;
+  occurred_at: string;
+};
+
 export type ReorderSuggestion = {
   product_id: string;
   product_name: string;
@@ -193,6 +207,25 @@ export const api = {
       method: "POST",
       body: JSON.stringify(payload),
     }),
+  transactions: (
+    token: string,
+    options?: {
+      productId?: string;
+      transactionType?: "check_in" | "check_out";
+      countryCode?: string;
+      allCountries?: boolean;
+      limit?: number;
+    },
+  ) => {
+    const params = new URLSearchParams();
+    if (options?.productId) params.set("product_id", options.productId);
+    if (options?.transactionType) params.set("transaction_type", options.transactionType);
+    if (options?.countryCode) params.set("country_code", options.countryCode);
+    if (options?.allCountries) params.set("all_countries", "true");
+    if (options?.limit) params.set("limit", String(options.limit));
+    const query = params.toString();
+    return request<InventoryTransaction[]>(`/inventory/transactions${query ? `?${query}` : ""}`, token);
+  },
   reorderSuggestions: (
     token: string,
     options?: { countryCode?: string; allCountries?: boolean },

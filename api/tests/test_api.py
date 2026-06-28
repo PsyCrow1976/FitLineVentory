@@ -131,3 +131,14 @@ def test_product_inventory_flow() -> None:
     stocked = next(i for i in inventory.json() if i["product_id"] == product_id)
     assert stocked["usage_days_per_unit"] == 14
     assert stocked["estimated_supply_days"] == 56
+
+    transactions = client.get("/api/v1/inventory/transactions", headers=headers)
+    assert transactions.status_code == 200
+    txns = transactions.json()
+    assert len(txns) >= 2
+    assert any(t["type"] == "check_in" for t in txns)
+    assert any(t["type"] == "check_out" for t in txns)
+    assert all(t["product_name"] for t in txns)
+
+    check_ins = client.get("/api/v1/inventory/transactions?transaction_type=check_in", headers=headers)
+    assert all(t["type"] == "check_in" for t in check_ins.json())
