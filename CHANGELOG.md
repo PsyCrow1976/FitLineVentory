@@ -2,6 +2,22 @@
 
 User-facing changes for FitLineVentory releases.
 
+## [0.3.0] — 2026-06-28
+
+### Added
+
+- **Multi-country FitLine scraping** — Admin scrape buttons for Denmark, Germany, Norway, Sweden, and Finland
+- **Last scraped date** — each country in Admin shows when its catalog was last scraped
+- **Profile** — set default country; product lists, inventory, and reorder hints filter to that shop (optional “all countries”)
+- **Product catalog** — country and currency on each row; tap a product to edit **tags** and **usage** inline
+- **Usage per unit** — default 1 month (30 days) per unit, or custom days; dashboard shows estimated supply when you tap an item
+- **Activity history** — check-in history on Check in, check-out history on Check out, combined recent activity on Dashboard
+
+### Changed
+
+- Check-in and check-out quantities are **whole numbers only** (no decimals)
+- Product tag editor opens directly under the selected catalog row (not at the bottom of the list)
+
 ## [0.2.0] — 2026-06-28
 
 ### Added

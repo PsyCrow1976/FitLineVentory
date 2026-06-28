@@ -2,6 +2,40 @@
 
 Internal log of bugs fixed and technical issues resolved during development.
 
+## [0.3.0] — 2026-06-28
+
+### Schema & API
+
+- **Migration `003`** — `products.tags` (JSONB array)
+- **Migration `004`** — `users.default_country_code` (default `DK`)
+- **Migration `005`** — `products.usage_days_per_unit`, `products.usage_is_custom`
+- **`PATCH /auth/profile`** — update default country; validated against seeded sources
+- **`PATCH /products/{id}`** — tags and usage fields; `ProductRead` includes `source_name`, `country_code`, `currency`
+- **`GET /inventory/transactions`** — enriched with product name, unit, country; filters `transaction_type`, country, `limit`
+- **Check-in/out quantity** — Pydantic `int` only; API returns 422 for decimals (e.g. `1.5`)
+- **Scraper price attribute** — `price_{currency}` instead of hardcoded `price_dkk`
+- **Admin sources** — `last_scraped_at` from `MAX(products.scraped_at)` per source
+
+### UI / UX fixes
+
+- **Tag editor placement** — moved from bottom of catalog list to inline under clicked product
+- **Quantity display** — `formatQuantity()` strips fractional zeros (`6.000` → `6`) across dashboard, history, reorder
+- **Per-country scrape loading** — Admin uses `scrapingId` per source instead of disabling all buttons
+
+### FitLine country paths (seeded)
+
+| Code | Path |
+|------|------|
+| DK | `/dk/da-dk/products` |
+| DE | `/de/de-de/products` |
+| NO | `/no/nb-no/products` |
+| SE | `/se/sv-se/products` |
+| FI | `/fi/fi-fi/products` |
+
+### Tests
+
+- Profile country filter, usage PATCH, supply days on inventory, transaction list, decimal quantity rejection — 4/4 pytest pass in Docker
+
 ## [0.2.0] — 2026-06-28
 
 ### Fixed / resolved while building scraper + favorites

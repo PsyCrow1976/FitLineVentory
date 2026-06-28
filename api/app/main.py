@@ -10,7 +10,7 @@ from app.routers import admin, auth, inventory, products, sources
 app = FastAPI(
     title="FitLineVentory API",
     description="Personal inventory for FitLine and other product sources",
-    version="0.2.0",
+    version="0.3.0",
     docs_url="/docs",
     openapi_url="/openapi.json",
 )

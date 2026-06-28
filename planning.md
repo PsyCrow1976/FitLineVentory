@@ -139,8 +139,8 @@ Use `- [x]` when implemented **and** verified working (especially on Unraid).
 
 ### Phase 4 — FitLine & data
 
-- [x] Document FitLine country URL patterns — Denmark in README
-- [x] Seed initial `product_sources` for countries you use — `fitline-dk`
+- [x] Document FitLine country URL patterns — DK, DE, NO, SE, FI in README
+- [x] Seed initial `product_sources` for countries you use — `fitline-dk`, `fitline-de`, `fitline-no`, `fitline-se`, `fitline-fi`
 - [x] Manual entry workflow for FitLine products
 - [x] Product attributes for price, promo, pack size (manual v1)
 
@@ -159,11 +159,15 @@ Use `- [x]` when implemented **and** verified working (especially on Unraid).
 - [x] Update README with setup and usage instructions
 - [x] In-place update guide — [docs/UPDATING.md](docs/UPDATING.md) (terminal + Compose Manager)
 - [x] v0.2.0 update verified on Unraid (`192.168.1.130:8080`)
+- [x] v0.3.0 features shipped — profile, multi-country scrape, tags, usage, history (2026-06-28)
 
 ### Phase 6 — Future (out of v1 scope)
 
-- [x] FitLine product import / sync per country — **admin scrape v1 (Denmark)** — verified on Unraid
+- [x] FitLine product import / sync per country — **admin scrape** (DK, DE, NO, SE, FI)
 - [x] Product favorites for faster check-in — verified on Unraid (smartphone)
+- [x] User default country profile — **Profile** page (v0.3.0)
+- [x] Product tags and usage duration — catalog editor + dashboard supply estimate (v0.3.0)
+- [x] Check-in/out and dashboard activity history (v0.3.0)
 - [ ] Price and promo tracking over time
 - [ ] PWA (installable web app)
 - [ ] Android app (API client)
@@ -180,7 +184,7 @@ Use `- [x]` when implemented **and** verified working (especially on Unraid).
 | Stack | PostgreSQL 16, FastAPI, React+Vite+Tailwind, nginx, Docker Compose |
 | Users (v1) | Single-user, JWT auth |
 | Unraid access | Direct port mapping (e.g. `:8080`) |
-| FitLine countries | **Denmark (DK)** — `https://www.fitline.com/dk` |
+| FitLine countries | **DK, DE, NO, SE, FI** — seeded sources, user picks default in Profile |
 | Unraid server | `192.168.1.130:8080` |
 
 ---
