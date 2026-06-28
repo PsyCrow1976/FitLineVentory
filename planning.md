@@ -148,6 +148,7 @@ Use `- [x]` when implemented **and** verified working (especially on Unraid).
 
 - [ ] Deploy stack on Unraid (`192.168.1.130`)
 - [x] Document port mapping and access URL
+- [x] Step-by-step Unraid install guide — [docs/UNRAID-INSTALL.md](docs/UNRAID-INSTALL.md)
 - [x] Document backup/restore for Postgres volume
 - [ ] End-to-end smoke test on Unraid:
   - [ ] Create product source

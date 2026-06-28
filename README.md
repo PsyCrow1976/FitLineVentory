@@ -10,46 +10,32 @@ Personal inventory for PM International FitLine products. Check in stock when or
 - **nginx** — serves the web app and proxies API requests
 - **Docker Compose** — deployment on Unraid or any Docker host
 
-## Quick start (Unraid / local)
+## Unraid install (step-by-step)
 
-1. Clone the repository on your server:
-   ```bash
-   git clone https://github.com/PsyCrow1976/FitLineVentory.git
-   cd FitLineVentory
-   ```
+See **[docs/UNRAID-INSTALL.md](docs/UNRAID-INSTALL.md)** for the full guide.
 
-2. Create environment file:
-   ```bash
-   cp .env.example .env
-   ```
-   Edit `.env` and set strong values for `POSTGRES_PASSWORD`, `JWT_SECRET`, and `ADMIN_PASSWORD`.
+Short version:
 
-3. Start the stack:
-   ```bash
-   docker compose up -d --build
-   ```
-
-4. Open the app:
-   - **Unraid:** [http://192.168.1.130:8080](http://192.168.1.130:8080)
-   - **Local:** [http://localhost:8080](http://localhost:8080)
-
-5. Sign in with the credentials from `.env` (`ADMIN_USERNAME` / `ADMIN_PASSWORD`).
-
-## Unraid notes
-
-| Item | Value |
-|------|-------|
-| Default URL | `http://192.168.1.130:8080` |
-| Port | `8080` (change via `HTTP_PORT` in `.env`) |
-| Postgres data | Docker volume `fitlineventory_postgres_data` |
-
-To persist data on an Unraid appdata path, add a bind mount in `docker-compose.yml`:
-
-```yaml
-db:
-  volumes:
-    - /mnt/user/appdata/fitlineventory/postgres:/var/lib/postgresql/data
+```bash
+mkdir -p /mnt/user/appdata/fitlineventory && cd /mnt/user/appdata/fitlineventory
+git clone https://github.com/PsyCrow1976/FitLineVentory.git .
+cp .env.example .env && nano .env   # set passwords
+cp docker-compose.override.example.yml docker-compose.override.yml   # optional: appdata DB path
+docker compose up -d --build
 ```
+
+Open [http://192.168.1.130:8080](http://192.168.1.130:8080) and sign in with `ADMIN_USERNAME` / `ADMIN_PASSWORD` from `.env`.
+
+## Quick start (local)
+
+```bash
+git clone https://github.com/PsyCrow1976/FitLineVentory.git
+cd FitLineVentory
+cp .env.example .env
+docker compose up -d --build
+```
+
+Open [http://localhost:8080](http://localhost:8080).
 
 ### Backup
 
