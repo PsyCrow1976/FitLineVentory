@@ -133,7 +133,7 @@ Use `- [x]` when implemented **and** verified working (especially on Unraid).
 - [x] Check-in flow
 - [x] Check-out flow
 - [x] Reorder suggestions view
-- [ ] UI works on smartphone browser (verified on Unraid)
+- [x] UI works on smartphone browser (verified on Unraid)
 - [ ] UI works on tablet browser (verified on Unraid)
 - [ ] UI works on laptop browser (verified on Unraid)
 
@@ -146,7 +146,7 @@ Use `- [x]` when implemented **and** verified working (especially on Unraid).
 
 ### Phase 5 — Unraid deployment & verification
 
-- [ ] Deploy stack on Unraid (`192.168.1.130`)
+- [x] Deploy stack on Unraid (`192.168.1.130`)
 - [x] Document port mapping and access URL
 - [x] Step-by-step Unraid install guide — [docs/UNRAID-INSTALL.md](docs/UNRAID-INSTALL.md)
 - [x] Document backup/restore for Postgres volume
