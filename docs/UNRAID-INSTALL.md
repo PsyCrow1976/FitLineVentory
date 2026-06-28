@@ -24,21 +24,81 @@ Docker Compose starts three containers:
 Before you start, confirm the following on your Unraid server:
 
 1. **Docker is running** — Unraid → **Settings → Docker** → enabled.
-2. **Docker Compose is available** — open a terminal and run:
-   ```bash
-   docker compose version
-   ```
-   Unraid 6.12+ includes the Compose plugin. If the command is missing, install the **Docker Compose Manager** plugin from Community Applications, or use the standalone Compose plugin for Unraid.
+2. **Docker Compose** — Unraid does **not** ship with `docker compose` by default. See **Step 0** below to install it.
 3. **Git is available** — run:
    ```bash
    git --version
    ```
-   If missing, install Git from **Apps** (Nerd Tools / git package) or clone the repo on another machine and copy the folder to Unraid.
+   If missing, install Git from **Apps** (Nerd Tools / git package) or clone the repo on another PC and copy the folder to Unraid.
 4. **Port 8080 is free** — or pick another port and set `HTTP_PORT` in `.env` later.
 5. **SSH or terminal access** — Unraid web UI → **Terminal**, or SSH:
    ```bash
    ssh root@192.168.1.130
    ```
+
+### Check what you have today
+
+Run these in the Unraid terminal:
+
+```bash
+docker version
+docker compose version
+docker-compose version
+```
+
+| Output | Meaning |
+|--------|---------|
+| `docker compose version` shows v2.x | Ready — skip to Step 1 |
+| `unknown command` or `not found` for compose | Install Step 0 first |
+| Only `docker-compose` (with hyphen) works | Use `docker-compose` instead of `docker compose` in all commands |
+
+---
+
+## Step 0 — Install Docker Compose on Unraid
+
+Unraid has Docker, but Compose is a **separate plugin**. Pick one method.
+
+### Method A — Compose Manager Plus (recommended)
+
+This installs the `docker compose` CLI **and** gives you a web UI to manage stacks.
+
+1. Unraid → **Apps** (Community Applications)
+2. Search for **Compose Manager Plus**
+3. Click **Install**
+4. Wait for installation to finish
+5. Verify in terminal:
+   ```bash
+   docker compose version
+   ```
+
+**Manual plugin install** (if Apps search fails):
+
+1. Unraid → **Plugins** → **Install Plugin**
+2. Paste this URL:
+   ```
+   https://raw.githubusercontent.com/mstrhakr/compose_plugin/main/compose.manager.plg
+   ```
+3. Click **Install**, then reboot Unraid if prompted
+4. Verify: `docker compose version`
+
+### Method B — Legacy Docker Compose Manager
+
+Older Unraid guides reference this plugin (still works on many systems):
+
+1. **Apps** → search **Docker Compose Manager**
+2. Install it
+3. After install, try:
+   ```bash
+   docker compose version
+   ```
+   or
+   ```bash
+   docker-compose version
+   ```
+
+### Method C — GUI only (no terminal compose commands)
+
+If you install **Compose Manager Plus** (Method A), you can run the entire stack from the Unraid web UI without typing `docker compose` in the terminal. Jump to **Step 5B** after completing Steps 1–4.
 
 ---
 
@@ -142,13 +202,19 @@ Docker Compose automatically merges `docker-compose.override.yml` with `docker-c
 
 ---
 
-## Step 5 — Build and start the stack
+## Step 5A — Build and start (terminal)
 
 From the project directory:
 
 ```bash
 cd /mnt/user/appdata/fitlineventory
 docker compose up -d --build
+```
+
+If only the older hyphenated command works:
+
+```bash
+docker-compose up -d --build
 ```
 
 The first run downloads images and builds the API and web containers. This can take several minutes.
@@ -167,6 +233,32 @@ fitlineventory-db-1    Up (healthy)
 fitlineventory-api-1   Up
 fitlineventory-web-1   Up
 ```
+
+---
+
+## Step 5B — Build and start (Unraid web UI)
+
+Use this if `docker compose` is not available in the terminal, but you installed **Compose Manager Plus** (Step 0, Method A).
+
+1. Complete **Steps 1–4** first (clone repo, create `.env`, optional override file).
+2. Unraid → **Plugins** → **Compose.Manager** (or **Compose** tab in the header if enabled).
+3. Click **Add New Stack** → label it `FitLineVentory`.
+4. Click the **gear icon** next to the stack → **Edit Stack**.
+5. Open **Settings** tab:
+   - Set **External Compose Path** to:
+     ```
+     /mnt/user/appdata/fitlineventory/docker-compose.yml
+     ```
+   - Set **External Env Path** to:
+     ```
+     /mnt/user/appdata/fitlineventory/.env
+     ```
+   - Save.
+6. Back on the Compose page, click the stack's **gear icon** → **Compose Up** (or **Build & Up**).
+7. A popup shows build progress. Wait until it says **Connection Closed**, then click **Done**.
+8. Go to **Docker** tab — you should see `fitlineventory-db-1`, `fitlineventory-api-1`, and `fitlineventory-web-1` running.
+
+To update later: Compose Manager → **Update Stack** next to FitLineVentory.
 
 ---
 
@@ -313,7 +405,20 @@ docker compose restart api
 
 ### `docker compose` command not found
 
-Install the Docker Compose plugin via Community Applications, or run compose from a machine that has it and manage the stack over SSH.
+Unraid does not include Compose out of the box. Fix:
+
+1. Install **Compose Manager Plus** — see **Step 0, Method A**
+2. Reboot Unraid if the plugin asks you to
+3. Verify: `docker compose version`
+4. If terminal still fails, use the **web UI path** — **Step 5B**
+
+Common mistake: running `docker compose up` before installing the plugin. Docker itself works (`docker version`), but compose is a separate add-on.
+
+**Plugin install URL** (Plugins → Install Plugin):
+
+```
+https://raw.githubusercontent.com/mstrhakr/compose_plugin/main/compose.manager.plg
+```
 
 ### Build fails on low disk space
 

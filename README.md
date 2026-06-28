@@ -14,6 +14,8 @@ Personal inventory for PM International FitLine products. Check in stock when or
 
 See **[docs/UNRAID-INSTALL.md](docs/UNRAID-INSTALL.md)** for the full guide.
 
+> **No `docker compose` on Unraid?** Install **Compose Manager Plus** from Community Applications first (Step 0 in the guide), or use the web UI method (Step 5B).
+
 Short version:
 
 ```bash
