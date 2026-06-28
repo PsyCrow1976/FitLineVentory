@@ -4,6 +4,7 @@ import { api, Product, productImageUrl } from "../api";
 import { useAuth } from "../auth";
 import TransactionHistory from "../components/TransactionHistory";
 import { countryLabel } from "../countries";
+import { formatQuantity, parseWholeQuantity, sanitizeQuantityInput } from "../quantities";
 
 export default function CheckOutPage() {
   const { token } = useAuth();
@@ -45,8 +46,13 @@ export default function CheckOutPage() {
     setError("");
     setMessage("");
     try {
-      const result = await api.checkOut(token, { product_id: productId, quantity, note: note || undefined });
-      setMessage(`Checked out. Remaining: ${result.quantity_on_hand} ${result.unit}`);
+      const wholeQuantity = parseWholeQuantity(quantity);
+      const result = await api.checkOut(token, {
+        product_id: productId,
+        quantity: wholeQuantity,
+        note: note || undefined,
+      });
+      setMessage(`Checked out. Remaining: ${formatQuantity(result.quantity_on_hand)} ${result.unit}`);
       setHistoryRefresh((value) => value + 1);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Check-out failed");
@@ -127,11 +133,12 @@ export default function CheckOutPage() {
             Quantity
             <input
               type="number"
-              min="0.001"
-              step="0.001"
+              min="1"
+              step="1"
+              inputMode="numeric"
               className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2"
               value={quantity}
-              onChange={(e) => setQuantity(e.target.value)}
+              onChange={(e) => setQuantity(sanitizeQuantityInput(e.target.value))}
               required
             />
           </label>

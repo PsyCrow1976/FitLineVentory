@@ -4,6 +4,7 @@ import { api, InventoryItem } from "../api";
 import { useAuth } from "../auth";
 import TransactionHistory from "../components/TransactionHistory";
 import { countryLabel } from "../countries";
+import { formatQuantity } from "../quantities";
 import { formatSupplyDuration, usageLabel } from "../usage";
 
 export default function DashboardPage() {
@@ -99,7 +100,7 @@ export default function DashboardPage() {
                   <p className="text-xs uppercase tracking-wide text-slate-400">{item.source.name}</p>
                   <h3 className="mt-1 font-semibold">{item.product.name}</h3>
                   <p className="mt-3 text-3xl font-bold text-brand-700">
-                    {item.quantity_on_hand}{" "}
+                    {formatQuantity(item.quantity_on_hand)}{" "}
                     <span className="text-base font-medium text-slate-500">{item.unit}</span>
                   </p>
                   <p className="mt-2 text-sm text-slate-500">
@@ -115,7 +116,7 @@ export default function DashboardPage() {
                     </p>
                     <p className="mt-2">
                       <span className="font-medium text-slate-800">Calculation:</span>{" "}
-                      {item.quantity_on_hand} {item.unit} × {item.usage_days_per_unit} days
+                      {formatQuantity(item.quantity_on_hand)} {item.unit} × {item.usage_days_per_unit} days
                     </p>
                     <p className="mt-2 text-lg font-semibold text-brand-700">
                       ≈ {formatSupplyDuration(item.estimated_supply_days)} ({item.estimated_supply_days} days)

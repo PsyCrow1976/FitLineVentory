@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { api, InventoryTransaction } from "../api";
 import { useAuth } from "../auth";
 import { countryLabel } from "../countries";
+import { formatQuantity } from "../quantities";
 
 type TransactionHistoryProps = {
   title: string;
@@ -82,7 +83,7 @@ export default function TransactionHistory({
               <div className="shrink-0 text-left sm:text-right">
                 <p className="font-semibold text-slate-900">
                   {txn.type === "check_out" ? "−" : "+"}
-                  {txn.quantity} {txn.unit}
+                  {formatQuantity(txn.quantity)} {txn.unit}
                 </p>
                 <p className="text-xs text-slate-500">{formatWhen(txn.occurred_at)}</p>
               </div>

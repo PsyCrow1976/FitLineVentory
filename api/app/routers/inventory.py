@@ -1,3 +1,4 @@
+from decimal import Decimal
 from typing import Annotated
 from uuid import UUID
 
@@ -62,7 +63,7 @@ def check_in(
     db: Annotated[Session, Depends(get_db)],
     user: Annotated[User, Depends(get_current_user)],
 ) -> InventoryItemRead:
-    inventory_service.check_in(db, user, payload.product_id, payload.quantity, payload.note)
+    inventory_service.check_in(db, user, payload.product_id, Decimal(payload.quantity), payload.note)
     item = inventory_service.get_inventory_item(db, user, payload.product_id)
     if not item:
         raise ValueError("Inventory item not found after check-in")
@@ -75,7 +76,7 @@ def check_out(
     db: Annotated[Session, Depends(get_db)],
     user: Annotated[User, Depends(get_current_user)],
 ) -> InventoryItemRead:
-    inventory_service.check_out(db, user, payload.product_id, payload.quantity, payload.note)
+    inventory_service.check_out(db, user, payload.product_id, Decimal(payload.quantity), payload.note)
     item = inventory_service.get_inventory_item(db, user, payload.product_id)
     if not item:
         raise ValueError("Inventory item not found after check-out")

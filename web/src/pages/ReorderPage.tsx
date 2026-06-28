@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { api, ReorderSuggestion } from "../api";
 import { useAuth } from "../auth";
 import { countryLabel } from "../countries";
+import { formatQuantity } from "../quantities";
 
 const urgencyStyles: Record<string, string> = {
   out_of_stock: "bg-red-100 text-red-800",
@@ -73,7 +74,7 @@ export default function ReorderPage() {
               <div>
                 <dt className="text-slate-500">On hand</dt>
                 <dd className="font-medium">
-                  {item.quantity_on_hand} {item.unit}
+                  {formatQuantity(item.quantity_on_hand)} {item.unit}
                 </dd>
               </div>
               <div>

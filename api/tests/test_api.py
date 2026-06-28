@@ -142,3 +142,10 @@ def test_product_inventory_flow() -> None:
 
     check_ins = client.get("/api/v1/inventory/transactions?transaction_type=check_in", headers=headers)
     assert all(t["type"] == "check_in" for t in check_ins.json())
+
+    decimal_check_in = client.post(
+        "/api/v1/inventory/check-in",
+        json={"product_id": product_id, "quantity": 1.5},
+        headers=headers,
+    )
+    assert decimal_check_in.status_code == 422

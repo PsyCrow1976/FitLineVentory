@@ -130,13 +130,13 @@ class InventoryItemRead(BaseModel):
 
 class CheckInRequest(BaseModel):
     product_id: UUID
-    quantity: Decimal = Field(gt=0)
+    quantity: int = Field(gt=0)
     note: str | None = None
 
 
 class CheckOutRequest(BaseModel):
     product_id: UUID
-    quantity: Decimal = Field(gt=0)
+    quantity: int = Field(gt=0)
     note: str | None = None
 
 

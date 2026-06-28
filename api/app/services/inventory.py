@@ -182,7 +182,7 @@ def serialize_transaction(transaction: InventoryTransaction) -> InventoryTransac
         country_code=source.country_code if source else None,
         type=txn_type,
         quantity_delta=transaction.quantity_delta,
-        quantity=quantity,
+        quantity=quantity.quantize(Decimal("1")),
         note=transaction.note,
         occurred_at=transaction.occurred_at,
     )
