@@ -1,11 +1,61 @@
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, KeyboardEvent, useEffect, useState } from "react";
 import { api, Product, ProductSource } from "../api";
 import { useAuth } from "../auth";
+
+const COUNTRY_NAMES: Record<string, string> = {
+  DK: "Denmark",
+  DE: "Germany",
+  NO: "Norway",
+  SE: "Sweden",
+};
+
+function countryLabel(code: string | null, sourceName: string | null): string {
+  if (code && COUNTRY_NAMES[code]) {
+    return `${COUNTRY_NAMES[code]} (${code})`;
+  }
+  if (code) {
+    return code;
+  }
+  return sourceName ?? "Unknown";
+}
+
+function productPrice(product: Product): string | null {
+  const priceAttr = product.attributes.find(
+    (attr) => attr.key.startsWith("price_") || attr.key === "price",
+  );
+  if (!priceAttr) {
+    return null;
+  }
+  const currency = product.currency ?? "DKK";
+  return `${priceAttr.value} ${currency}`;
+}
+
+function TagChip({ label, onRemove }: { label: string; onRemove?: () => void }) {
+  return (
+    <span className="inline-flex items-center gap-1 rounded-full bg-brand-50 px-2.5 py-0.5 text-xs font-medium text-brand-800">
+      {label}
+      {onRemove && (
+        <button
+          type="button"
+          onClick={onRemove}
+          className="rounded-full px-1 text-brand-600 hover:bg-brand-100 hover:text-brand-900"
+          aria-label={`Remove tag ${label}`}
+        >
+          ×
+        </button>
+      )}
+    </span>
+  );
+}
 
 export default function ProductsPage() {
   const { token } = useAuth();
   const [sources, setSources] = useState<ProductSource[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [editTags, setEditTags] = useState<string[]>([]);
+  const [newTag, setNewTag] = useState("");
+  const [savingTags, setSavingTags] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
@@ -14,6 +64,9 @@ export default function ProductsPage() {
   const [name, setName] = useState("");
   const [unit, setUnit] = useState("unit");
   const [price, setPrice] = useState("");
+
+  const selectedProduct = products.find((product) => product.id === selectedId) ?? null;
+  const selectedSource = sources.find((source) => source.id === sourceId);
 
   useEffect(() => {
     if (!token) return;
@@ -28,15 +81,69 @@ export default function ProductsPage() {
       .catch((err: Error) => setError(err.message));
   }, [token]);
 
+  useEffect(() => {
+    if (selectedProduct) {
+      setEditTags(selectedProduct.tags ?? []);
+      setNewTag("");
+    }
+  }, [selectedProduct?.id, selectedProduct?.tags]);
+
+  function selectProduct(product: Product) {
+    setSelectedId((current) => (current === product.id ? null : product.id));
+    setError("");
+    setSuccess("");
+  }
+
+  function addTag() {
+    const cleaned = newTag.trim();
+    if (!cleaned) return;
+    if (editTags.some((tag) => tag.toLowerCase() === cleaned.toLowerCase())) {
+      setNewTag("");
+      return;
+    }
+    setEditTags((prev) => [...prev, cleaned]);
+    setNewTag("");
+  }
+
+  function handleTagKeyDown(event: KeyboardEvent<HTMLInputElement>) {
+    if (event.key === "Enter") {
+      event.preventDefault();
+      addTag();
+    }
+  }
+
+  function removeTag(tag: string) {
+    setEditTags((prev) => prev.filter((item) => item !== tag));
+  }
+
+  async function saveTags() {
+    if (!token || !selectedProduct) return;
+    setSavingTags(true);
+    setError("");
+    setSuccess("");
+    try {
+      const updated = await api.updateProduct(token, selectedProduct.id, { tags: editTags });
+      setProducts((prev) => prev.map((product) => (product.id === updated.id ? updated : product)));
+      setSuccess("Tags saved.");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to save tags");
+    } finally {
+      setSavingTags(false);
+    }
+  }
+
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
     if (!token) return;
     setError("");
     setSuccess("");
     try {
-      const attributes = price
-        ? [{ key: "price_dkk", value: price, value_type: "decimal" }]
-        : [];
+      const currency = selectedSource?.country_code === "DK" ? "DKK" : "EUR";
+      const attributes = [];
+      if (price) {
+        attributes.push({ key: `price_${currency.toLowerCase()}`, value: price, value_type: "decimal" });
+        attributes.push({ key: "currency", value: currency, value_type: "string" });
+      }
       const product = await api.createProduct(token, {
         source_id: sourceId,
         external_id: externalId,
@@ -106,7 +213,7 @@ export default function ProductsPage() {
               />
             </label>
             <label className="block text-sm font-medium">
-              Price (DKK)
+              Price ({selectedSource?.country_code === "DK" ? "DKK" : "currency"})
               <input
                 className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2"
                 value={price}
@@ -124,27 +231,101 @@ export default function ProductsPage() {
           </button>
         </form>
 
-        {error && <p className="mt-3 text-sm text-red-600">{error}</p>}
-        {success && <p className="mt-3 text-sm text-green-700">{success}</p>}
+        {error && !selectedProduct && <p className="mt-3 text-sm text-red-600">{error}</p>}
+        {success && !selectedProduct && <p className="mt-3 text-sm text-green-700">{success}</p>}
       </section>
 
       <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
         <h2 className="text-xl font-bold">Catalog</h2>
-        <ul className="mt-4 divide-y divide-slate-100">
-          {products.map((product) => {
-            const source = sources.find((s) => s.id === product.source_id);
-            const priceAttr = product.attributes.find((a) => a.key === "price_dkk");
-            return (
-              <li key={product.id} className="py-3">
-                <p className="font-medium">{product.name}</p>
-                <p className="text-sm text-slate-500">
-                  {source?.name} · {product.external_id} · {product.unit}
-                  {priceAttr ? ` · ${priceAttr.value} DKK` : ""}
-                </p>
-              </li>
-            );
-          })}
-        </ul>
+        <p className="mt-1 text-sm text-slate-500">Tap a product to edit tags</p>
+
+        {products.length === 0 ? (
+          <p className="mt-4 text-sm text-slate-500">No products yet.</p>
+        ) : (
+          <ul className="mt-4 divide-y divide-slate-100">
+            {products.map((product) => {
+              const isSelected = product.id === selectedId;
+              const priceLabel = productPrice(product);
+              return (
+                <li key={product.id}>
+                  <button
+                    type="button"
+                    onClick={() => selectProduct(product)}
+                    className={`w-full py-3 text-left transition ${
+                      isSelected ? "rounded-lg bg-brand-50 px-3 -mx-3" : "hover:bg-slate-50"
+                    }`}
+                  >
+                    <p className="font-medium">{product.name}</p>
+                    <p className="text-sm text-slate-500">
+                      {countryLabel(product.country_code, product.source_name)} · {product.external_id} ·{" "}
+                      {product.unit}
+                      {priceLabel ? ` · ${priceLabel}` : ""}
+                      {product.currency && !priceLabel ? ` · ${product.currency}` : ""}
+                    </p>
+                    {product.tags.length > 0 && (
+                      <div className="mt-2 flex flex-wrap gap-1.5">
+                        {product.tags.map((tag) => (
+                          <TagChip key={tag} label={tag} />
+                        ))}
+                      </div>
+                    )}
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+
+        {selectedProduct && (
+          <div className="mt-6 rounded-xl border border-brand-100 bg-brand-50/40 p-4">
+            <h3 className="font-semibold text-slate-900">{selectedProduct.name}</h3>
+            <p className="mt-1 text-sm text-slate-600">
+              {countryLabel(selectedProduct.country_code, selectedProduct.source_name)}
+              {selectedProduct.currency ? ` · ${selectedProduct.currency}` : ""}
+              {productPrice(selectedProduct) ? ` · ${productPrice(selectedProduct)}` : ""}
+            </p>
+
+            <div className="mt-4">
+              <p className="text-sm font-medium text-slate-700">Tags</p>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {editTags.length === 0 ? (
+                  <p className="text-sm text-slate-500">No tags yet — add one below.</p>
+                ) : (
+                  editTags.map((tag) => <TagChip key={tag} label={tag} onRemove={() => removeTag(tag)} />)
+                )}
+              </div>
+
+              <div className="mt-3 flex gap-2">
+                <input
+                  className="min-w-0 flex-1 rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                  value={newTag}
+                  onChange={(e) => setNewTag(e.target.value)}
+                  onKeyDown={handleTagKeyDown}
+                  placeholder="Add tag (e.g. daily, promo)"
+                />
+                <button
+                  type="button"
+                  onClick={addTag}
+                  className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium hover:bg-slate-50"
+                >
+                  Add
+                </button>
+              </div>
+
+              <button
+                type="button"
+                disabled={savingTags}
+                onClick={saveTags}
+                className="mt-4 rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700 disabled:opacity-50"
+              >
+                {savingTags ? "Saving..." : "Save tags"}
+              </button>
+            </div>
+
+            {error && <p className="mt-3 text-sm text-red-600">{error}</p>}
+            {success && <p className="mt-3 text-sm text-green-700">{success}</p>}
+          </div>
+        )}
       </section>
     </div>
   );

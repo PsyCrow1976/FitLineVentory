@@ -8,13 +8,29 @@ from sqlalchemy.orm import Session, joinedload
 from app.auth import get_current_user
 from app.database import get_db
 from app.models import Product, ProductAttribute, ProductSource, User
-from app.schemas import FavoriteUpdate, ProductCreate, ProductRead
+from app.schemas import FavoriteUpdate, ProductCreate, ProductRead, ProductUpdate
+from app.services.products import to_product_read
 
 router = APIRouter(prefix="/products", tags=["products"])
 
 
 def _product_query():
-    return select(Product).options(joinedload(Product.attributes))
+    return select(Product).options(joinedload(Product.attributes), joinedload(Product.source))
+
+
+def _normalize_tags(tags: list[str]) -> list[str]:
+    seen: set[str] = set()
+    normalized: list[str] = []
+    for tag in tags:
+        cleaned = tag.strip()
+        if not cleaned:
+            continue
+        key = cleaned.casefold()
+        if key in seen:
+            continue
+        seen.add(key)
+        normalized.append(cleaned)
+    return normalized
 
 
 @router.get("", response_model=list[ProductRead])
@@ -25,7 +41,7 @@ def list_products(
     favorites_only: bool = False,
     scraped_only: bool = False,
     for_checkin: bool = False,
-) -> list[Product]:
+) -> list[ProductRead]:
     stmt = _product_query()
     if source_id:
         stmt = stmt.where(Product.source_id == source_id)
@@ -41,10 +57,10 @@ def list_products(
         others = [p for p in products if not p.is_favorite]
         favorites.sort(key=lambda p: p.name.lower())
         others.sort(key=lambda p: p.name.lower())
-        return favorites + others
+        return [to_product_read(p) for p in favorites + others]
 
     products.sort(key=lambda p: (not p.is_favorite, p.name.lower()))
-    return products
+    return [to_product_read(p) for p in products]
 
 
 @router.post("", response_model=ProductRead, status_code=status.HTTP_201_CREATED)
@@ -52,7 +68,7 @@ def create_product(
     payload: ProductCreate,
     db: Annotated[Session, Depends(get_db)],
     _: Annotated[User, Depends(get_current_user)],
-) -> Product:
+) -> ProductRead:
     source = db.get(ProductSource, payload.source_id)
     if not source:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Source not found")
@@ -71,7 +87,30 @@ def create_product(
     db.add(product)
     db.commit()
     db.refresh(product)
-    return product
+    product = db.scalar(_product_query().where(Product.id == product.id))
+    assert product is not None
+    return to_product_read(product)
+
+
+@router.patch("/{product_id}", response_model=ProductRead)
+def update_product(
+    product_id: UUID,
+    payload: ProductUpdate,
+    db: Annotated[Session, Depends(get_db)],
+    _: Annotated[User, Depends(get_current_user)],
+) -> ProductRead:
+    product = db.scalar(_product_query().where(Product.id == product_id))
+    if not product:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Product not found")
+
+    if payload.tags is not None:
+        product.tags = _normalize_tags(payload.tags)
+
+    db.commit()
+    db.refresh(product)
+    product = db.scalar(_product_query().where(Product.id == product_id))
+    assert product is not None
+    return to_product_read(product)
 
 
 @router.patch("/{product_id}/favorite", response_model=ProductRead)
@@ -80,14 +119,16 @@ def set_favorite(
     payload: FavoriteUpdate,
     db: Annotated[Session, Depends(get_db)],
     _: Annotated[User, Depends(get_current_user)],
-) -> Product:
+) -> ProductRead:
     product = db.scalar(_product_query().where(Product.id == product_id))
     if not product:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Product not found")
     product.is_favorite = payload.is_favorite
     db.commit()
     db.refresh(product)
-    return product
+    product = db.scalar(_product_query().where(Product.id == product_id))
+    assert product is not None
+    return to_product_read(product)
 
 
 @router.get("/{product_id}", response_model=ProductRead)
@@ -95,8 +136,8 @@ def get_product(
     product_id: UUID,
     db: Annotated[Session, Depends(get_db)],
     _: Annotated[User, Depends(get_current_user)],
-) -> Product:
+) -> ProductRead:
     product = db.scalar(_product_query().where(Product.id == product_id))
     if not product:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Product not found")
-    return product
+    return to_product_read(product)

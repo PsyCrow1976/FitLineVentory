@@ -86,3 +86,14 @@ def test_product_inventory_flow() -> None:
     me = client.get("/api/v1/auth/me", headers=headers)
     assert me.status_code == 200
     assert me.json()["is_admin"] is True
+
+    tags_update = client.patch(
+        f"/api/v1/products/{product_id}",
+        json={"tags": ["daily", "morning", "daily"]},
+        headers=headers,
+    )
+    assert tags_update.status_code == 200
+    body = tags_update.json()
+    assert body["tags"] == ["daily", "morning"]
+    assert body["country_code"] == "DK"
+    assert body["source_name"] == "FitLine Denmark"

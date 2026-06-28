@@ -34,12 +34,16 @@ export type Product = {
   description: string | null;
   unit: string;
   metadata: Record<string, unknown>;
+  tags: string[];
   image_url: string | null;
   image_path: string | null;
   source_url: string | null;
   is_favorite: boolean;
   scraped_at: string | null;
   attributes: ProductAttribute[];
+  source_name: string | null;
+  country_code: string | null;
+  currency: string | null;
 };
 
 export type InventoryItem = {
@@ -136,6 +140,11 @@ export const api = {
     request<Product>(`/products/${productId}/favorite`, token, {
       method: "PATCH",
       body: JSON.stringify({ is_favorite: isFavorite }),
+    }),
+  updateProduct: (token: string, productId: string, payload: { tags: string[] }) =>
+    request<Product>(`/products/${productId}`, token, {
+      method: "PATCH",
+      body: JSON.stringify(payload),
     }),
   inventory: (token: string) => request<InventoryItem[]>("/inventory", token),
   checkIn: (token: string, payload: { product_id: string; quantity: string; note?: string }) =>

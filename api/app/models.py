@@ -61,6 +61,7 @@ class Product(Base):
     description: Mapped[str | None] = mapped_column(Text)
     unit: Mapped[str] = mapped_column(String(50), default="unit", nullable=False)
     metadata_: Mapped[dict] = mapped_column("metadata", JSONB, default=dict, nullable=False)
+    tags: Mapped[list] = mapped_column(JSONB, default=list, nullable=False)
     image_url: Mapped[str | None] = mapped_column(String(1000))
     image_path: Mapped[str | None] = mapped_column(String(500))
     source_url: Mapped[str | None] = mapped_column(String(1000))

@@ -77,6 +77,7 @@ class ProductRead(BaseModel):
     description: str | None
     unit: str
     metadata: dict = Field(default_factory=dict, validation_alias="metadata_")
+    tags: list[str] = Field(default_factory=list)
     image_url: str | None = None
     image_path: str | None = None
     source_url: str | None = None
@@ -85,6 +86,13 @@ class ProductRead(BaseModel):
     created_at: datetime
     updated_at: datetime | None = None
     attributes: list[ProductAttributeRead] = Field(default_factory=list)
+    source_name: str | None = None
+    country_code: str | None = None
+    currency: str | None = None
+
+
+class ProductUpdate(BaseModel):
+    tags: list[str] | None = None
 
 
 class FavoriteUpdate(BaseModel):
