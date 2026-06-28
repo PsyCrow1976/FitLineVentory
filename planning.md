@@ -157,10 +157,13 @@ Use `- [x]` when implemented **and** verified working (especially on Unraid).
   - [ ] Check out stock
   - [ ] Reorder suggestion appears correctly
 - [x] Update README with setup and usage instructions
+- [x] In-place update guide — [docs/UPDATING.md](docs/UPDATING.md) (terminal + Compose Manager)
+- [x] v0.2.0 update verified on Unraid (`192.168.1.130:8080`)
 
 ### Phase 6 — Future (out of v1 scope)
 
-- [x] FitLine product import / sync per country — **admin scrape v1 (Denmark)**
+- [x] FitLine product import / sync per country — **admin scrape v1 (Denmark)** — verified on Unraid
+- [x] Product favorites for faster check-in — verified on Unraid (smartphone)
 - [ ] Price and promo tracking over time
 - [ ] PWA (installable web app)
 - [ ] Android app (API client)

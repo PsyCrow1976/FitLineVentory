@@ -11,6 +11,13 @@ Internal log of bugs fixed and technical issues resolved during development.
 - **FitLine `base_url` for scrape** — Changed seed from `fitline.com/dk` to `fitline.com` + path `/dk/da-dk/products` for correct list URL
 - **Duplicate `settings` import** — Removed in `auth.py` after adding `require_admin`
 
+### Verified on Unraid (post-release)
+
+- **v0.2.0 in-place update** — `git pull` + `docker compose up -d --build` (or Compose Manager **Update Stack**) applied migration `002_scraper_favorites` without data loss
+- **API tests** — 4/4 pass in Docker after v0.2.0 (`test_api`, `test_scraper`)
+- **Web image rebuild** — `docker compose build --no-cache web` succeeds; Admin page and favorites UI deploy cleanly
+- **False-positive pytest alert** — background run reported 2 failures from pre-v0.2.0 state (duplicate SKU, scraper regex); resolved before release commit `762eba7`
+
 ## [0.1.0] — 2026-06-28
 
 ### Build & deploy

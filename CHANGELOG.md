@@ -17,6 +17,12 @@ User-facing changes for FitLineVentory releases.
 - Products list supports filters: `favorites_only`, `scraped_only`, `for_checkin`
 - Check-in and check-out product pickers prioritize favorites
 
+### Verified
+
+- **Unraid update (v0.1.0 → v0.2.0)** — confirmed working on `192.168.1.130:8080` via `git pull` + rebuild
+- **Admin scraper** — FitLine Denmark catalog imports successfully after update
+- **Favorites** — marking favorites and favorites-first check-in/check-out confirmed on smartphone browser
+
 ## [0.1.0] — 2026-06-28
 
 ### Added
