@@ -1,4 +1,6 @@
+import { useEffect, useState } from "react";
 import { Link, NavLink } from "react-router-dom";
+import { api } from "../api";
 import { useAuth } from "../auth";
 
 const navClass = ({ isActive }: { isActive: boolean }) =>
@@ -7,7 +9,13 @@ const navClass = ({ isActive }: { isActive: boolean }) =>
   }`;
 
 export default function Layout({ children }: { children: React.ReactNode }) {
-  const { logout } = useAuth();
+  const { token, logout } = useAuth();
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    if (!token) return;
+    api.me(token).then((user) => setIsAdmin(user.is_admin)).catch(() => setIsAdmin(false));
+  }, [token]);
 
   return (
     <div className="min-h-screen">
@@ -35,6 +43,11 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             <NavLink to="/reorder" className={navClass}>
               Reorder
             </NavLink>
+            {isAdmin && (
+              <NavLink to="/admin" className={navClass}>
+                Admin
+              </NavLink>
+            )}
             <button
               onClick={logout}
               className="rounded-lg px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100"

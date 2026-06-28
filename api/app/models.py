@@ -44,6 +44,7 @@ class ProductSource(Base):
     name: Mapped[str] = mapped_column(String(200), nullable=False)
     base_url: Mapped[str | None] = mapped_column(String(500))
     country_code: Mapped[str | None] = mapped_column(String(2))
+    scrape_products_path: Mapped[str | None] = mapped_column(String(300))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
     products: Mapped[list["Product"]] = relationship(back_populates="source")
@@ -60,7 +61,15 @@ class Product(Base):
     description: Mapped[str | None] = mapped_column(Text)
     unit: Mapped[str] = mapped_column(String(50), default="unit", nullable=False)
     metadata_: Mapped[dict] = mapped_column("metadata", JSONB, default=dict, nullable=False)
+    image_url: Mapped[str | None] = mapped_column(String(1000))
+    image_path: Mapped[str | None] = mapped_column(String(500))
+    source_url: Mapped[str | None] = mapped_column(String(1000))
+    is_favorite: Mapped[bool] = mapped_column(default=False, nullable=False)
+    scraped_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
+    )
 
     source: Mapped["ProductSource"] = relationship(back_populates="products")
     attributes: Mapped[list["ProductAttribute"]] = relationship(

@@ -321,6 +321,10 @@ curl http://localhost:8080/health
 
 ## Updating to a new version
 
+See **[UPDATING.md](UPDATING.md)** for full instructions (terminal + Compose Manager UI).
+
+Quick version:
+
 ```bash
 cd /mnt/user/appdata/fitlineventory
 git pull

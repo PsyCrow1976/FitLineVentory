@@ -160,7 +160,7 @@ Use `- [x]` when implemented **and** verified working (especially on Unraid).
 
 ### Phase 6 — Future (out of v1 scope)
 
-- [ ] FitLine product import / sync per country
+- [x] FitLine product import / sync per country — **admin scrape v1 (Denmark)**
 - [ ] Price and promo tracking over time
 - [ ] PWA (installable web app)
 - [ ] Android app (API client)

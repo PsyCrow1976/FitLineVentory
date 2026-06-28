@@ -7,6 +7,7 @@ import DashboardPage from "./pages/DashboardPage";
 import LoginPage from "./pages/LoginPage";
 import ProductsPage from "./pages/ProductsPage";
 import ReorderPage from "./pages/ReorderPage";
+import AdminPage from "./pages/AdminPage";
 
 function ProtectedRoutes() {
   const { token } = useAuth();
@@ -22,6 +23,7 @@ function ProtectedRoutes() {
         <Route path="/check-in" element={<CheckInPage />} />
         <Route path="/check-out" element={<CheckOutPage />} />
         <Route path="/reorder" element={<ReorderPage />} />
+        <Route path="/admin" element={<AdminPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Layout>

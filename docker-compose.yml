@@ -18,6 +18,8 @@ services:
     build:
       context: ./api
     restart: unless-stopped
+    volumes:
+      - product_images:/app/data/images
     environment:
       DATABASE_URL: ${DATABASE_URL:-postgresql+psycopg://fitlineventory:fitlineventory@db:5432/fitlineventory}
       JWT_SECRET: ${JWT_SECRET:-dev-secret-change-in-production}
@@ -27,6 +29,7 @@ services:
       ADMIN_PASSWORD: ${ADMIN_PASSWORD:-admin}
       CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:8080,http://192.168.1.130:8080}
       REORDER_LOOKBACK_DAYS: ${REORDER_LOOKBACK_DAYS:-30}
+      IMAGE_STORAGE_PATH: /app/data/images
     depends_on:
       db:
         condition: service_healthy
@@ -43,4 +46,6 @@ services:
 
 volumes:
   postgres_data:
+    driver: local
+  product_images:
     driver: local

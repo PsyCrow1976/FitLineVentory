@@ -15,6 +15,14 @@ class LoginRequest(BaseModel):
     password: str
 
 
+class UserRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: UUID
+    username: str
+    is_admin: bool = False
+
+
 class ProductSourceCreate(BaseModel):
     slug: str = Field(min_length=1, max_length=100)
     name: str = Field(min_length=1, max_length=200)
@@ -30,6 +38,7 @@ class ProductSourceRead(BaseModel):
     name: str
     base_url: str | None
     country_code: str | None
+    scrape_products_path: str | None = None
     created_at: datetime
 
 
@@ -68,8 +77,24 @@ class ProductRead(BaseModel):
     description: str | None
     unit: str
     metadata: dict = Field(default_factory=dict, validation_alias="metadata_")
+    image_url: str | None = None
+    image_path: str | None = None
+    source_url: str | None = None
+    is_favorite: bool = False
+    scraped_at: datetime | None = None
     created_at: datetime
+    updated_at: datetime | None = None
     attributes: list[ProductAttributeRead] = Field(default_factory=list)
+
+
+class FavoriteUpdate(BaseModel):
+    is_favorite: bool
+
+
+class ScrapeResult(BaseModel):
+    created: int
+    updated: int
+    total_scraped: int
 
 
 class InventoryItemRead(BaseModel):

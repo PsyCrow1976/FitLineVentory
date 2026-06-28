@@ -71,4 +71,13 @@ docker compose logs -f api
 docker compose exec api pytest tests/test_api.py -q
 ```
 
+## Updating on Unraid
+
+See **[docs/UPDATING.md](docs/UPDATING.md)** — terminal (`git pull` + `docker compose up -d --build`) or Compose Manager UI.
+
+## Changelog
+
+- User-facing: [CHANGELOG.md](CHANGELOG.md)
+- Development fixes: [CHANGELOG-DEV.md](CHANGELOG-DEV.md)
+
 See [planning.md](planning.md) for the full implementation checklist.

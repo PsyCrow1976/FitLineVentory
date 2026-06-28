@@ -1,11 +1,12 @@
-import { FormEvent, useEffect, useState } from "react";
-import { api, Product } from "../api";
+import { FormEvent, useEffect, useMemo, useState } from "react";
+import { api, Product, productImageUrl } from "../api";
 import { useAuth } from "../auth";
 
 export default function CheckOutPage() {
   const { token } = useAuth();
   const [products, setProducts] = useState<Product[]>([]);
   const [productId, setProductId] = useState("");
+  const [showAll, setShowAll] = useState(false);
   const [quantity, setQuantity] = useState("1");
   const [note, setNote] = useState("");
   const [message, setMessage] = useState("");
@@ -13,11 +14,19 @@ export default function CheckOutPage() {
 
   useEffect(() => {
     if (!token) return;
-    api.products(token).then((list) => {
+    api.products(token, { forCheckin: true }).then((list) => {
       setProducts(list);
       if (list.length > 0) setProductId(list[0].id);
     });
   }, [token]);
+
+  const visibleProducts = useMemo(() => {
+    if (showAll) return products;
+    const favorites = products.filter((p) => p.is_favorite);
+    return favorites.length > 0 ? favorites : products;
+  }, [products, showAll]);
+
+  const favoritesCount = products.filter((p) => p.is_favorite).length;
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
@@ -32,10 +41,35 @@ export default function CheckOutPage() {
     }
   }
 
+  const selected = visibleProducts.find((p) => p.id === productId);
+
   return (
     <section className="mx-auto max-w-lg rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
       <h2 className="text-xl font-bold">Check out / consume</h2>
       <p className="mt-1 text-sm text-slate-500">Record product usage to track consumption</p>
+
+      {favoritesCount > 0 && (
+        <div className="mt-4 flex gap-2">
+          <button
+            type="button"
+            onClick={() => setShowAll(false)}
+            className={`rounded-lg px-3 py-1.5 text-sm ${
+              !showAll ? "bg-brand-600 text-white" : "bg-slate-100 text-slate-600"
+            }`}
+          >
+            Favorites ({favoritesCount})
+          </button>
+          <button
+            type="button"
+            onClick={() => setShowAll(true)}
+            className={`rounded-lg px-3 py-1.5 text-sm ${
+              showAll ? "bg-brand-600 text-white" : "bg-slate-100 text-slate-600"
+            }`}
+          >
+            All products
+          </button>
+        </div>
+      )}
 
       <form onSubmit={handleSubmit} className="mt-4 space-y-4">
         <label className="block text-sm font-medium">
@@ -45,13 +79,22 @@ export default function CheckOutPage() {
             value={productId}
             onChange={(e) => setProductId(e.target.value)}
           >
-            {products.map((product) => (
+            {visibleProducts.map((product) => (
               <option key={product.id} value={product.id}>
+                {product.is_favorite ? "★ " : ""}
                 {product.name}
               </option>
             ))}
           </select>
         </label>
+
+        {selected && productImageUrl(selected) && (
+          <img
+            src={productImageUrl(selected)!}
+            alt={selected.name}
+            className="mx-auto h-24 object-contain"
+          />
+        )}
 
         <label className="block text-sm font-medium">
           Quantity

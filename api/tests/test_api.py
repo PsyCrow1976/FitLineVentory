@@ -1,5 +1,6 @@
 import os
 
+import uuid
 from decimal import Decimal
 
 from fastapi.testclient import TestClient
@@ -41,7 +42,7 @@ def test_product_inventory_flow() -> None:
 
     product_payload = {
         "source_id": source_id,
-        "external_id": "TEST-001",
+        "external_id": f"TEST-{uuid.uuid4().hex[:8]}",
         "name": "PowerCocktail Test",
         "unit": "can",
         "attributes": [{"key": "price_dkk", "value": "299", "value_type": "decimal"}],
@@ -69,3 +70,19 @@ def test_product_inventory_flow() -> None:
     suggestions = client.get("/api/v1/inventory/reorder-suggestions", headers=headers)
     assert suggestions.status_code == 200
     assert len(suggestions.json()) >= 1
+
+    favorite = client.patch(
+        f"/api/v1/products/{product_id}/favorite",
+        json={"is_favorite": True},
+        headers=headers,
+    )
+    assert favorite.status_code == 200
+    assert favorite.json()["is_favorite"] is True
+
+    favorites = client.get("/api/v1/products?favorites_only=true", headers=headers)
+    assert favorites.status_code == 200
+    assert len(favorites.json()) >= 1
+
+    me = client.get("/api/v1/auth/me", headers=headers)
+    assert me.status_code == 200
+    assert me.json()["is_admin"] is True

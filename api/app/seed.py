@@ -23,10 +23,14 @@ def seed() -> None:
                 ProductSource(
                     slug="fitline-dk",
                     name="FitLine Denmark",
-                    base_url="https://www.fitline.com/dk",
+                    base_url="https://www.fitline.com",
                     country_code="DK",
+                    scrape_products_path="/dk/da-dk/products",
                 )
             )
+        else:
+            fitline_dk.base_url = "https://www.fitline.com"
+            fitline_dk.scrape_products_path = "/dk/da-dk/products"
 
         db.commit()
 

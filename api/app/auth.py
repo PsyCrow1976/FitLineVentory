@@ -3,6 +3,7 @@ from typing import Annotated
 from uuid import UUID
 
 from fastapi import Depends, HTTPException, status
+
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from jose import JWTError, jwt
 from passlib.context import CryptContext
@@ -55,4 +56,13 @@ def get_current_user(
     user = db.scalar(select(User).where(User.id == UUID(user_id)))
     if user is None:
         raise credentials_exception
+    return user
+
+
+def require_admin(user: User) -> User:
+    if user.username != settings.admin_username:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Admin access required",
+        )
     return user
