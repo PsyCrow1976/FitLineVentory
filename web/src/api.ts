@@ -18,6 +18,7 @@ export type ProductSource = {
 
 export type ScrapeSource = ProductSource & {
   can_scrape: boolean;
+  last_scraped_at: string | null;
 };
 
 export type ProductAttribute = {

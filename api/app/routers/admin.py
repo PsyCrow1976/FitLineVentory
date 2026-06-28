@@ -2,12 +2,12 @@ from typing import Annotated
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.auth import get_current_user, require_admin
 from app.database import get_db
-from app.models import ProductSource, User
+from app.models import Product, ProductSource, User
 from app.services import scraper as scraper_service
 
 router = APIRouter(prefix="/admin", tags=["admin"])
@@ -44,6 +44,11 @@ def list_scrape_sources(
     sources = db.scalars(
         select(ProductSource).order_by(ProductSource.country_code, ProductSource.name)
     ).all()
+    last_scraped_rows = db.execute(
+        select(Product.source_id, func.max(Product.scraped_at)).group_by(Product.source_id)
+    ).all()
+    last_scraped_by_source = {source_id: scraped_at for source_id, scraped_at in last_scraped_rows}
+
     return [
         {
             "id": str(source.id),
@@ -53,6 +58,7 @@ def list_scrape_sources(
             "scrape_products_path": source.scrape_products_path,
             "country_code": source.country_code,
             "can_scrape": bool(source.base_url and source.scrape_products_path),
+            "last_scraped_at": last_scraped_by_source.get(source.id),
         }
         for source in sources
     ]

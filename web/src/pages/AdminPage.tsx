@@ -3,6 +3,17 @@ import { api, Product, productImageUrl, ScrapeSource } from "../api";
 import { useAuth } from "../auth";
 import { COUNTRY_NAMES, countryLabel } from "../countries";
 
+function formatLastScraped(iso: string | null): string {
+  if (!iso) return "Never scraped";
+  return new Date(iso).toLocaleString(undefined, {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
 export default function AdminPage() {
   const { token } = useAuth();
   const [sources, setSources] = useState<ScrapeSource[]>([]);
@@ -99,6 +110,12 @@ export default function AdminPage() {
                   <p className="text-sm text-slate-500">
                     {source.base_url}
                     {source.scrape_products_path}
+                  </p>
+                  <p className="mt-1 text-sm text-slate-600">
+                    Last scraped:{" "}
+                    <span className={source.last_scraped_at ? "font-medium text-slate-800" : "text-slate-500"}>
+                      {formatLastScraped(source.last_scraped_at)}
+                    </span>
                   </p>
                 </div>
                 <button
