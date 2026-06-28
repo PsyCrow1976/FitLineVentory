@@ -41,7 +41,9 @@ def list_scrape_sources(
     user: Annotated[User, Depends(get_current_user)],
 ) -> list[dict]:
     require_admin(user)
-    sources = db.scalars(select(ProductSource).order_by(ProductSource.name)).all()
+    sources = db.scalars(
+        select(ProductSource).order_by(ProductSource.country_code, ProductSource.name)
+    ).all()
     return [
         {
             "id": str(source.id),

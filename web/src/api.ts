@@ -4,6 +4,7 @@ export type UserInfo = {
   id: string;
   username: string;
   is_admin: boolean;
+  default_country_code: string;
 };
 
 export type ProductSource = {
@@ -118,16 +119,30 @@ export function productImageUrl(product: Product): string | null {
 
 export const api = {
   me: (token: string) => request<UserInfo>("/auth/me", token),
+  updateProfile: (token: string, payload: { default_country_code: string }) =>
+    request<UserInfo>("/auth/profile", token, {
+      method: "PATCH",
+      body: JSON.stringify(payload),
+    }),
   sources: (token: string) => request<ProductSource[]>("/sources", token),
   adminSources: (token: string) => request<ScrapeSource[]>("/admin/sources", token),
   scrapeSource: (token: string, sourceId: string) =>
     request<ScrapeResult>(`/admin/scrape/${sourceId}?download_images=true`, token, { method: "POST" }),
   products: (
     token: string,
-    options?: { sourceId?: string; favoritesOnly?: boolean; forCheckin?: boolean; scrapedOnly?: boolean },
+    options?: {
+      sourceId?: string;
+      countryCode?: string;
+      allCountries?: boolean;
+      favoritesOnly?: boolean;
+      forCheckin?: boolean;
+      scrapedOnly?: boolean;
+    },
   ) => {
     const params = new URLSearchParams();
     if (options?.sourceId) params.set("source_id", options.sourceId);
+    if (options?.countryCode) params.set("country_code", options.countryCode);
+    if (options?.allCountries) params.set("all_countries", "true");
     if (options?.favoritesOnly) params.set("favorites_only", "true");
     if (options?.forCheckin) params.set("for_checkin", "true");
     if (options?.scrapedOnly) params.set("scraped_only", "true");
@@ -146,7 +161,16 @@ export const api = {
       method: "PATCH",
       body: JSON.stringify(payload),
     }),
-  inventory: (token: string) => request<InventoryItem[]>("/inventory", token),
+  inventory: (
+    token: string,
+    options?: { countryCode?: string; allCountries?: boolean },
+  ) => {
+    const params = new URLSearchParams();
+    if (options?.countryCode) params.set("country_code", options.countryCode);
+    if (options?.allCountries) params.set("all_countries", "true");
+    const query = params.toString();
+    return request<InventoryItem[]>(`/inventory${query ? `?${query}` : ""}`, token);
+  },
   checkIn: (token: string, payload: { product_id: string; quantity: string; note?: string }) =>
     request<InventoryItem>("/inventory/check-in", token, {
       method: "POST",
@@ -157,6 +181,14 @@ export const api = {
       method: "POST",
       body: JSON.stringify(payload),
     }),
-  reorderSuggestions: (token: string) =>
-    request<ReorderSuggestion[]>("/inventory/reorder-suggestions", token),
+  reorderSuggestions: (
+    token: string,
+    options?: { countryCode?: string; allCountries?: boolean },
+  ) => {
+    const params = new URLSearchParams();
+    if (options?.countryCode) params.set("country_code", options.countryCode);
+    if (options?.allCountries) params.set("all_countries", "true");
+    const query = params.toString();
+    return request<ReorderSuggestion[]>(`/inventory/reorder-suggestions${query ? `?${query}` : ""}`, token);
+  },
 };

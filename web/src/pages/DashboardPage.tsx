@@ -2,28 +2,49 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { api, InventoryItem } from "../api";
 import { useAuth } from "../auth";
+import { countryLabel } from "../countries";
 
 export default function DashboardPage() {
   const { token } = useAuth();
   const [items, setItems] = useState<InventoryItem[]>([]);
+  const [showAllCountries, setShowAllCountries] = useState(false);
+  const [defaultCountry, setDefaultCountry] = useState("DK");
   const [error, setError] = useState("");
 
   useEffect(() => {
     if (!token) return;
+    api.me(token).then((user) => setDefaultCountry(user.default_country_code));
+  }, [token]);
+
+  useEffect(() => {
+    if (!token) return;
     api
-      .inventory(token)
+      .inventory(token, { allCountries: showAllCountries })
       .then(setItems)
       .catch((err: Error) => setError(err.message));
-  }, [token]);
+  }, [token, showAllCountries]);
 
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h2 className="text-2xl font-bold">Inventory dashboard</h2>
-          <p className="text-slate-500">Current stock across your products</p>
+          <p className="text-slate-500">
+            {showAllCountries ? "All countries" : countryLabel(defaultCountry)} ·{" "}
+            <Link to="/profile" className="text-brand-600 hover:underline">
+              Profile
+            </Link>
+          </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <label className="flex items-center gap-2 text-sm text-slate-600">
+            <input
+              type="checkbox"
+              checked={showAllCountries}
+              onChange={(e) => setShowAllCountries(e.target.checked)}
+            />
+            All countries
+          </label>
           <Link
             to="/check-in"
             className="rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700"

@@ -43,6 +43,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             <NavLink to="/reorder" className={navClass}>
               Reorder
             </NavLink>
+            <NavLink to="/profile" className={navClass}>
+              Profile
+            </NavLink>
             {isAdmin && (
               <NavLink to="/admin" className={navClass}>
                 Admin

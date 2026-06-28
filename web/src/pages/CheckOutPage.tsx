@@ -1,12 +1,16 @@
 import { FormEvent, useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import { api, Product, productImageUrl } from "../api";
 import { useAuth } from "../auth";
+import { countryLabel } from "../countries";
 
 export default function CheckOutPage() {
   const { token } = useAuth();
   const [products, setProducts] = useState<Product[]>([]);
   const [productId, setProductId] = useState("");
   const [showAll, setShowAll] = useState(false);
+  const [showAllCountries, setShowAllCountries] = useState(false);
+  const [defaultCountry, setDefaultCountry] = useState("DK");
   const [quantity, setQuantity] = useState("1");
   const [note, setNote] = useState("");
   const [message, setMessage] = useState("");
@@ -14,11 +18,16 @@ export default function CheckOutPage() {
 
   useEffect(() => {
     if (!token) return;
-    api.products(token, { forCheckin: true }).then((list) => {
+    api.me(token).then((user) => setDefaultCountry(user.default_country_code));
+  }, [token]);
+
+  useEffect(() => {
+    if (!token) return;
+    api.products(token, { forCheckin: true, allCountries: showAllCountries }).then((list) => {
       setProducts(list);
       if (list.length > 0) setProductId(list[0].id);
     });
-  }, [token]);
+  }, [token, showAllCountries]);
 
   const visibleProducts = useMemo(() => {
     if (showAll) return products;
@@ -46,7 +55,21 @@ export default function CheckOutPage() {
   return (
     <section className="mx-auto max-w-lg rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
       <h2 className="text-xl font-bold">Check out / consume</h2>
-      <p className="mt-1 text-sm text-slate-500">Record product usage to track consumption</p>
+      <p className="mt-1 text-sm text-slate-500">
+        {showAllCountries ? "All countries" : countryLabel(defaultCountry)} ·{" "}
+        <Link to="/profile" className="text-brand-600 hover:underline">
+          Profile
+        </Link>
+      </p>
+
+      <label className="mt-3 flex items-center gap-2 text-sm text-slate-600">
+        <input
+          type="checkbox"
+          checked={showAllCountries}
+          onChange={(e) => setShowAllCountries(e.target.checked)}
+        />
+        Show all countries
+      </label>
 
       {favoritesCount > 0 && (
         <div className="mt-4 flex gap-2">

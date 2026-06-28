@@ -8,6 +8,7 @@ import LoginPage from "./pages/LoginPage";
 import ProductsPage from "./pages/ProductsPage";
 import ReorderPage from "./pages/ReorderPage";
 import AdminPage from "./pages/AdminPage";
+import ProfilePage from "./pages/ProfilePage";
 
 function ProtectedRoutes() {
   const { token } = useAuth();
@@ -24,6 +25,7 @@ function ProtectedRoutes() {
         <Route path="/check-out" element={<CheckOutPage />} />
         <Route path="/reorder" element={<ReorderPage />} />
         <Route path="/admin" element={<AdminPage />} />
+        <Route path="/profile" element={<ProfilePage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Layout>

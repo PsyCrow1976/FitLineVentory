@@ -134,7 +134,8 @@ def scrape_source(db: Session, source: ProductSource, download_images: bool = Tr
             product.metadata_ = {**product.metadata_, "scraped": True, "currency": item.currency}
 
             if item.price is not None:
-                _upsert_attribute(product, "price_dkk", str(item.price), "decimal")
+                price_key = f"price_{item.currency.lower()}" if item.currency else "price"
+                _upsert_attribute(product, price_key, str(item.price), "decimal")
             if item.currency:
                 _upsert_attribute(product, "currency", item.currency, "string")
 

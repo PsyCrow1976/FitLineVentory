@@ -18,6 +18,7 @@ from app.schemas import (
     ReorderSuggestion,
 )
 from app.services import inventory as inventory_service
+from app.services.country import effective_country_code
 
 router = APIRouter(prefix="/inventory", tags=["inventory"])
 
@@ -38,8 +39,15 @@ def serialize_inventory_item(item: InventoryItem) -> InventoryItemRead:
 def list_inventory(
     db: Annotated[Session, Depends(get_db)],
     user: Annotated[User, Depends(get_current_user)],
+    country_code: str | None = None,
+    all_countries: bool = False,
 ) -> list[InventoryItemRead]:
-    items = inventory_service.list_inventory(db, user)
+    filter_country = effective_country_code(
+        user.default_country_code,
+        country_code=country_code,
+        all_countries=all_countries,
+    )
+    items = inventory_service.list_inventory(db, user, country_code=filter_country)
     return [serialize_inventory_item(item) for item in items]
 
 
@@ -91,5 +99,12 @@ def list_transactions(
 def reorder_suggestions(
     db: Annotated[Session, Depends(get_db)],
     user: Annotated[User, Depends(get_current_user)],
+    country_code: str | None = None,
+    all_countries: bool = False,
 ) -> list[ReorderSuggestion]:
-    return inventory_service.reorder_suggestions(db, user)
+    filter_country = effective_country_code(
+        user.default_country_code,
+        country_code=country_code,
+        all_countries=all_countries,
+    )
+    return inventory_service.reorder_suggestions(db, user, country_code=filter_country)

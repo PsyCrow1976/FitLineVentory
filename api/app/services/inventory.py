@@ -91,9 +91,11 @@ def get_inventory_item(db: Session, user: User, product_id) -> InventoryItem | N
     return db.scalars(stmt).unique().first()
 
 
-def list_inventory(db: Session, user: User) -> list[InventoryItem]:
+def list_inventory(db: Session, user: User, country_code: str | None = None) -> list[InventoryItem]:
     stmt = (
         select(InventoryItem)
+        .join(InventoryItem.product)
+        .join(Product.source)
         .options(
             joinedload(InventoryItem.product).joinedload(Product.source),
             joinedload(InventoryItem.product).joinedload(Product.attributes),
@@ -101,12 +103,14 @@ def list_inventory(db: Session, user: User) -> list[InventoryItem]:
         .where(InventoryItem.user_id == user.id)
         .order_by(InventoryItem.updated_at.desc())
     )
+    if country_code:
+        stmt = stmt.where(ProductSource.country_code == country_code)
     return list(db.scalars(stmt).unique().all())
 
 
-def reorder_suggestions(db: Session, user: User) -> list[ReorderSuggestion]:
+def reorder_suggestions(db: Session, user: User, country_code: str | None = None) -> list[ReorderSuggestion]:
     lookback_start = datetime.now(timezone.utc) - timedelta(days=settings.reorder_lookback_days)
-    items = list_inventory(db, user)
+    items = list_inventory(db, user, country_code=country_code)
     suggestions: list[ReorderSuggestion] = []
 
     for item in items:

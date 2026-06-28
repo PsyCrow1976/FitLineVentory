@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { api, ReorderSuggestion } from "../api";
 import { useAuth } from "../auth";
+import { countryLabel } from "../countries";
 
 const urgencyStyles: Record<string, string> = {
   out_of_stock: "bg-red-100 text-red-800",
@@ -13,21 +15,41 @@ const urgencyStyles: Record<string, string> = {
 export default function ReorderPage() {
   const { token } = useAuth();
   const [suggestions, setSuggestions] = useState<ReorderSuggestion[]>([]);
+  const [showAllCountries, setShowAllCountries] = useState(false);
+  const [defaultCountry, setDefaultCountry] = useState("DK");
   const [error, setError] = useState("");
 
   useEffect(() => {
     if (!token) return;
+    api.me(token).then((user) => setDefaultCountry(user.default_country_code));
+  }, [token]);
+
+  useEffect(() => {
+    if (!token) return;
     api
-      .reorderSuggestions(token)
+      .reorderSuggestions(token, { allCountries: showAllCountries })
       .then(setSuggestions)
       .catch((err: Error) => setError(err.message));
-  }, [token]);
+  }, [token, showAllCountries]);
 
   return (
     <div className="space-y-4">
       <div>
         <h2 className="text-2xl font-bold">Reorder suggestions</h2>
-        <p className="text-slate-500">Based on your consumption over the last 30 days</p>
+        <p className="text-slate-500">
+          {showAllCountries ? "All countries" : countryLabel(defaultCountry)} ·{" "}
+          <Link to="/profile" className="text-brand-600 hover:underline">
+            Profile
+          </Link>
+        </p>
+        <label className="mt-2 flex items-center gap-2 text-sm text-slate-600">
+          <input
+            type="checkbox"
+            checked={showAllCountries}
+            onChange={(e) => setShowAllCountries(e.target.checked)}
+          />
+          Show all countries
+        </label>
       </div>
 
       {error && <p className="rounded-lg bg-red-50 p-3 text-sm text-red-700">{error}</p>}

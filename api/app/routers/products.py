@@ -9,6 +9,7 @@ from app.auth import get_current_user
 from app.database import get_db
 from app.models import Product, ProductAttribute, ProductSource, User
 from app.schemas import FavoriteUpdate, ProductCreate, ProductRead, ProductUpdate
+from app.services.country import effective_country_code
 from app.services.products import to_product_read
 
 router = APIRouter(prefix="/products", tags=["products"])
@@ -36,15 +37,25 @@ def _normalize_tags(tags: list[str]) -> list[str]:
 @router.get("", response_model=list[ProductRead])
 def list_products(
     db: Annotated[Session, Depends(get_db)],
-    _: Annotated[User, Depends(get_current_user)],
+    user: Annotated[User, Depends(get_current_user)],
     source_id: UUID | None = None,
+    country_code: str | None = None,
+    all_countries: bool = False,
     favorites_only: bool = False,
     scraped_only: bool = False,
     for_checkin: bool = False,
 ) -> list[ProductRead]:
-    stmt = _product_query()
+    stmt = _product_query().join(Product.source)
     if source_id:
         stmt = stmt.where(Product.source_id == source_id)
+    else:
+        filter_country = effective_country_code(
+            user.default_country_code,
+            country_code=country_code,
+            all_countries=all_countries,
+        )
+        if filter_country:
+            stmt = stmt.where(ProductSource.country_code == filter_country)
     if favorites_only:
         stmt = stmt.where(Product.is_favorite.is_(True))
     if scraped_only:

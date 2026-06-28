@@ -97,3 +97,22 @@ def test_product_inventory_flow() -> None:
     assert body["tags"] == ["daily", "morning"]
     assert body["country_code"] == "DK"
     assert body["source_name"] == "FitLine Denmark"
+
+    profile = client.patch(
+        "/api/v1/auth/profile",
+        json={"default_country_code": "DE"},
+        headers=headers,
+    )
+    assert profile.status_code == 200
+    assert profile.json()["default_country_code"] == "DE"
+
+    me = client.get("/api/v1/auth/me", headers=headers)
+    assert me.json()["default_country_code"] == "DE"
+
+    dk_only = client.get("/api/v1/products", headers=headers)
+    assert all(p["country_code"] == "DE" for p in dk_only.json())
+
+    all_products = client.get("/api/v1/products?all_countries=true", headers=headers)
+    assert any(p["country_code"] == "DK" for p in all_products.json())
+
+    client.patch("/api/v1/auth/profile", json={"default_country_code": "DK"}, headers=headers)

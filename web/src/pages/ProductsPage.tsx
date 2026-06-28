@@ -1,23 +1,8 @@
 import { FormEvent, KeyboardEvent, useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { api, Product, ProductSource } from "../api";
 import { useAuth } from "../auth";
-
-const COUNTRY_NAMES: Record<string, string> = {
-  DK: "Denmark",
-  DE: "Germany",
-  NO: "Norway",
-  SE: "Sweden",
-};
-
-function countryLabel(code: string | null, sourceName: string | null): string {
-  if (code && COUNTRY_NAMES[code]) {
-    return `${COUNTRY_NAMES[code]} (${code})`;
-  }
-  if (code) {
-    return code;
-  }
-  return sourceName ?? "Unknown";
-}
+import { countryLabel } from "../countries";
 
 function productPrice(product: Product): string | null {
   const priceAttr = product.attributes.find(
@@ -56,6 +41,8 @@ export default function ProductsPage() {
   const [editTags, setEditTags] = useState<string[]>([]);
   const [newTag, setNewTag] = useState("");
   const [savingTags, setSavingTags] = useState(false);
+  const [showAllCountries, setShowAllCountries] = useState(false);
+  const [defaultCountry, setDefaultCountry] = useState("DK");
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
@@ -68,18 +55,33 @@ export default function ProductsPage() {
   const selectedProduct = products.find((product) => product.id === selectedId) ?? null;
   const selectedSource = sources.find((source) => source.id === sourceId);
 
+  function loadProducts(allCountries: boolean) {
+    if (!token) return;
+    api
+      .products(token, { allCountries })
+      .then(setProducts)
+      .catch((err: Error) => setError(err.message));
+  }
+
   useEffect(() => {
     if (!token) return;
-    Promise.all([api.sources(token), api.products(token)])
-      .then(([sourceList, productList]) => {
+    Promise.all([api.me(token), api.sources(token)])
+      .then(([user, sourceList]) => {
         setSources(sourceList);
-        setProducts(productList);
-        if (sourceList.length > 0) {
+        setDefaultCountry(user.default_country_code);
+        const preferred = sourceList.find((s) => s.country_code === user.default_country_code);
+        if (preferred) {
+          setSourceId(preferred.id);
+        } else if (sourceList.length > 0) {
           setSourceId(sourceList[0].id);
         }
       })
       .catch((err: Error) => setError(err.message));
   }, [token]);
+
+  useEffect(() => {
+    loadProducts(showAllCountries);
+  }, [token, showAllCountries]);
 
   useEffect(() => {
     if (selectedProduct) {
@@ -236,8 +238,26 @@ export default function ProductsPage() {
       </section>
 
       <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-        <h2 className="text-xl font-bold">Catalog</h2>
-        <p className="mt-1 text-sm text-slate-500">Tap a product to edit tags</p>
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h2 className="text-xl font-bold">Catalog</h2>
+            <p className="mt-1 text-sm text-slate-500">
+              Showing {showAllCountries ? "all countries" : countryLabel(defaultCountry)} ·{" "}
+              <Link to="/profile" className="text-brand-600 hover:underline">
+                change in Profile
+              </Link>
+            </p>
+          </div>
+          <label className="flex items-center gap-2 text-sm text-slate-600">
+            <input
+              type="checkbox"
+              checked={showAllCountries}
+              onChange={(e) => setShowAllCountries(e.target.checked)}
+            />
+            All countries
+          </label>
+        </div>
+        <p className="mt-2 text-sm text-slate-500">Tap a product to edit tags</p>
 
         {products.length === 0 ? (
           <p className="mt-4 text-sm text-slate-500">No products yet.</p>

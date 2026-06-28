@@ -21,6 +21,11 @@ class UserRead(BaseModel):
     id: UUID
     username: str
     is_admin: bool = False
+    default_country_code: str = "DK"
+
+
+class ProfileUpdate(BaseModel):
+    default_country_code: str = Field(min_length=2, max_length=2)
 
 
 class ProductSourceCreate(BaseModel):
