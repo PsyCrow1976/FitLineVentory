@@ -247,12 +247,12 @@ export default function ProductsPage() {
               const isSelected = product.id === selectedId;
               const priceLabel = productPrice(product);
               return (
-                <li key={product.id}>
+                <li key={product.id} className="py-1">
                   <button
                     type="button"
                     onClick={() => selectProduct(product)}
-                    className={`w-full py-3 text-left transition ${
-                      isSelected ? "rounded-lg bg-brand-50 px-3 -mx-3" : "hover:bg-slate-50"
+                    className={`w-full rounded-lg py-3 text-left transition ${
+                      isSelected ? "bg-brand-50 px-3" : "hover:bg-slate-50"
                     }`}
                   >
                     <p className="font-medium">{product.name}</p>
@@ -270,61 +270,54 @@ export default function ProductsPage() {
                       </div>
                     )}
                   </button>
+
+                  {isSelected && (
+                    <div className="mb-3 rounded-xl border border-brand-100 bg-brand-50/40 p-4">
+                      <p className="text-sm font-medium text-slate-700">Edit tags</p>
+                      <div className="mt-2 flex flex-wrap gap-2">
+                        {editTags.length === 0 ? (
+                          <p className="text-sm text-slate-500">No tags yet — add one below.</p>
+                        ) : (
+                          editTags.map((tag) => (
+                            <TagChip key={tag} label={tag} onRemove={() => removeTag(tag)} />
+                          ))
+                        )}
+                      </div>
+
+                      <div className="mt-3 flex gap-2">
+                        <input
+                          className="min-w-0 flex-1 rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                          value={newTag}
+                          onChange={(e) => setNewTag(e.target.value)}
+                          onKeyDown={handleTagKeyDown}
+                          placeholder="Add tag (e.g. daily, promo)"
+                        />
+                        <button
+                          type="button"
+                          onClick={addTag}
+                          className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium hover:bg-slate-50"
+                        >
+                          Add
+                        </button>
+                      </div>
+
+                      <button
+                        type="button"
+                        disabled={savingTags}
+                        onClick={saveTags}
+                        className="mt-4 rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700 disabled:opacity-50"
+                      >
+                        {savingTags ? "Saving..." : "Save tags"}
+                      </button>
+
+                      {error && <p className="mt-3 text-sm text-red-600">{error}</p>}
+                      {success && <p className="mt-3 text-sm text-green-700">{success}</p>}
+                    </div>
+                  )}
                 </li>
               );
             })}
           </ul>
-        )}
-
-        {selectedProduct && (
-          <div className="mt-6 rounded-xl border border-brand-100 bg-brand-50/40 p-4">
-            <h3 className="font-semibold text-slate-900">{selectedProduct.name}</h3>
-            <p className="mt-1 text-sm text-slate-600">
-              {countryLabel(selectedProduct.country_code, selectedProduct.source_name)}
-              {selectedProduct.currency ? ` · ${selectedProduct.currency}` : ""}
-              {productPrice(selectedProduct) ? ` · ${productPrice(selectedProduct)}` : ""}
-            </p>
-
-            <div className="mt-4">
-              <p className="text-sm font-medium text-slate-700">Tags</p>
-              <div className="mt-2 flex flex-wrap gap-2">
-                {editTags.length === 0 ? (
-                  <p className="text-sm text-slate-500">No tags yet — add one below.</p>
-                ) : (
-                  editTags.map((tag) => <TagChip key={tag} label={tag} onRemove={() => removeTag(tag)} />)
-                )}
-              </div>
-
-              <div className="mt-3 flex gap-2">
-                <input
-                  className="min-w-0 flex-1 rounded-lg border border-slate-300 px-3 py-2 text-sm"
-                  value={newTag}
-                  onChange={(e) => setNewTag(e.target.value)}
-                  onKeyDown={handleTagKeyDown}
-                  placeholder="Add tag (e.g. daily, promo)"
-                />
-                <button
-                  type="button"
-                  onClick={addTag}
-                  className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium hover:bg-slate-50"
-                >
-                  Add
-                </button>
-              </div>
-
-              <button
-                type="button"
-                disabled={savingTags}
-                onClick={saveTags}
-                className="mt-4 rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700 disabled:opacity-50"
-              >
-                {savingTags ? "Saving..." : "Save tags"}
-              </button>
-            </div>
-
-            {error && <p className="mt-3 text-sm text-red-600">{error}</p>}
-            {success && <p className="mt-3 text-sm text-green-700">{success}</p>}
-          </div>
         )}
       </section>
     </div>
