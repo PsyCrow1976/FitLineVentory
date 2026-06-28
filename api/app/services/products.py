@@ -1,5 +1,6 @@
 from app.models import Product
 from app.schemas import ProductRead
+from app.services.usage import effective_usage_days
 
 
 def product_currency(product: Product) -> str | None:
@@ -39,4 +40,6 @@ def to_product_read(product: Product) -> ProductRead:
         source_name=source.name if source else None,
         country_code=source.country_code if source else None,
         currency=product_currency(product),
+        usage_days_per_unit=effective_usage_days(product),
+        usage_is_custom=bool(product.usage_is_custom),
     )

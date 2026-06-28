@@ -63,6 +63,8 @@ class Product(Base):
     unit: Mapped[str] = mapped_column(String(50), default="unit", nullable=False)
     metadata_: Mapped[dict] = mapped_column("metadata", JSONB, default=dict, nullable=False)
     tags: Mapped[list] = mapped_column(JSONB, default=list, nullable=False)
+    usage_days_per_unit: Mapped[int] = mapped_column(default=30, nullable=False)
+    usage_is_custom: Mapped[bool] = mapped_column(default=False, nullable=False)
     image_url: Mapped[str | None] = mapped_column(String(1000))
     image_path: Mapped[str | None] = mapped_column(String(500))
     source_url: Mapped[str | None] = mapped_column(String(1000))

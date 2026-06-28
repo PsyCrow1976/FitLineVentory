@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { api, Product, ProductSource } from "../api";
 import { useAuth } from "../auth";
 import { countryLabel } from "../countries";
+import { DEFAULT_USAGE_DAYS, usageLabel } from "../usage";
 
 function productPrice(product: Product): string | null {
   const priceAttr = product.attributes.find(
@@ -40,7 +41,9 @@ export default function ProductsPage() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [editTags, setEditTags] = useState<string[]>([]);
   const [newTag, setNewTag] = useState("");
-  const [savingTags, setSavingTags] = useState(false);
+  const [savingChanges, setSavingChanges] = useState(false);
+  const [editUsageCustom, setEditUsageCustom] = useState(false);
+  const [editUsageDays, setEditUsageDays] = useState(DEFAULT_USAGE_DAYS);
   const [showAllCountries, setShowAllCountries] = useState(false);
   const [defaultCountry, setDefaultCountry] = useState("DK");
   const [error, setError] = useState("");
@@ -87,8 +90,10 @@ export default function ProductsPage() {
     if (selectedProduct) {
       setEditTags(selectedProduct.tags ?? []);
       setNewTag("");
+      setEditUsageCustom(selectedProduct.usage_is_custom);
+      setEditUsageDays(selectedProduct.usage_days_per_unit);
     }
-  }, [selectedProduct?.id, selectedProduct?.tags]);
+  }, [selectedProduct?.id, selectedProduct?.tags, selectedProduct?.usage_is_custom, selectedProduct?.usage_days_per_unit]);
 
   function selectProduct(product: Product) {
     setSelectedId((current) => (current === product.id ? null : product.id));
@@ -118,19 +123,24 @@ export default function ProductsPage() {
     setEditTags((prev) => prev.filter((item) => item !== tag));
   }
 
-  async function saveTags() {
+  async function saveChanges() {
     if (!token || !selectedProduct) return;
-    setSavingTags(true);
+    setSavingChanges(true);
     setError("");
     setSuccess("");
     try {
-      const updated = await api.updateProduct(token, selectedProduct.id, { tags: editTags });
+      const usageDays = editUsageCustom ? Math.max(1, editUsageDays) : DEFAULT_USAGE_DAYS;
+      const updated = await api.updateProduct(token, selectedProduct.id, {
+        tags: editTags,
+        usage_is_custom: editUsageCustom,
+        usage_days_per_unit: usageDays,
+      });
       setProducts((prev) => prev.map((product) => (product.id === updated.id ? updated : product)));
-      setSuccess("Tags saved.");
+      setSuccess("Product updated.");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to save tags");
+      setError(err instanceof Error ? err.message : "Failed to save changes");
     } finally {
-      setSavingTags(false);
+      setSavingChanges(false);
     }
   }
 
@@ -257,7 +267,7 @@ export default function ProductsPage() {
             All countries
           </label>
         </div>
-        <p className="mt-2 text-sm text-slate-500">Tap a product to edit tags</p>
+        <p className="mt-2 text-sm text-slate-500">Tap a product to edit tags and usage</p>
 
         {products.length === 0 ? (
           <p className="mt-4 text-sm text-slate-500">No products yet.</p>
@@ -281,6 +291,8 @@ export default function ProductsPage() {
                       {product.unit}
                       {priceLabel ? ` · ${priceLabel}` : ""}
                       {product.currency && !priceLabel ? ` · ${product.currency}` : ""}
+                      {" · "}
+                      {usageLabel(product.usage_days_per_unit, product.usage_is_custom)}
                     </p>
                     {product.tags.length > 0 && (
                       <div className="mt-2 flex flex-wrap gap-1.5">
@@ -293,7 +305,48 @@ export default function ProductsPage() {
 
                   {isSelected && (
                     <div className="mb-3 rounded-xl border border-brand-100 bg-brand-50/40 p-4">
-                      <p className="text-sm font-medium text-slate-700">Edit tags</p>
+                      <p className="text-sm font-medium text-slate-700">Usage per unit</p>
+                      <p className="mt-1 text-xs text-slate-500">
+                        Default is 1 month (30 days). Inventory duration = quantity × days per unit.
+                      </p>
+                      <div className="mt-3 space-y-2">
+                        <label className="flex items-center gap-2 text-sm">
+                          <input
+                            type="radio"
+                            name={`usage-${product.id}`}
+                            checked={!editUsageCustom}
+                            onChange={() => {
+                              setEditUsageCustom(false);
+                              setEditUsageDays(DEFAULT_USAGE_DAYS);
+                            }}
+                          />
+                          Standard — 1 month (30 days) per unit
+                        </label>
+                        <label className="flex items-center gap-2 text-sm">
+                          <input
+                            type="radio"
+                            name={`usage-${product.id}`}
+                            checked={editUsageCustom}
+                            onChange={() => setEditUsageCustom(true)}
+                          />
+                          Custom usage
+                        </label>
+                        {editUsageCustom && (
+                          <label className="block text-sm">
+                            Days per unit
+                            <input
+                              type="number"
+                              min={1}
+                              max={3650}
+                              className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2"
+                              value={editUsageDays}
+                              onChange={(e) => setEditUsageDays(Number(e.target.value) || 1)}
+                            />
+                          </label>
+                        )}
+                      </div>
+
+                      <p className="mt-4 text-sm font-medium text-slate-700">Tags</p>
                       <div className="mt-2 flex flex-wrap gap-2">
                         {editTags.length === 0 ? (
                           <p className="text-sm text-slate-500">No tags yet — add one below.</p>
@@ -323,11 +376,11 @@ export default function ProductsPage() {
 
                       <button
                         type="button"
-                        disabled={savingTags}
-                        onClick={saveTags}
+                        disabled={savingChanges}
+                        onClick={saveChanges}
                         className="mt-4 rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700 disabled:opacity-50"
                       >
-                        {savingTags ? "Saving..." : "Save tags"}
+                        {savingChanges ? "Saving..." : "Save changes"}
                       </button>
 
                       {error && <p className="mt-3 text-sm text-red-600">{error}</p>}

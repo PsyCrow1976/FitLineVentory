@@ -11,6 +11,7 @@ from app.models import Product, ProductAttribute, ProductSource, User
 from app.schemas import FavoriteUpdate, ProductCreate, ProductRead, ProductUpdate
 from app.services.country import effective_country_code
 from app.services.products import to_product_read
+from app.services.usage import DEFAULT_USAGE_DAYS_PER_UNIT
 
 router = APIRouter(prefix="/products", tags=["products"])
 
@@ -116,6 +117,16 @@ def update_product(
 
     if payload.tags is not None:
         product.tags = _normalize_tags(payload.tags)
+
+    if payload.usage_is_custom is False:
+        product.usage_is_custom = False
+        product.usage_days_per_unit = DEFAULT_USAGE_DAYS_PER_UNIT
+    elif payload.usage_is_custom is True:
+        product.usage_is_custom = True
+        if payload.usage_days_per_unit is not None:
+            product.usage_days_per_unit = payload.usage_days_per_unit
+    elif payload.usage_days_per_unit is not None and product.usage_is_custom:
+        product.usage_days_per_unit = payload.usage_days_per_unit
 
     db.commit()
     db.refresh(product)

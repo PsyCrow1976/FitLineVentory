@@ -45,6 +45,8 @@ export type Product = {
   source_name: string | null;
   country_code: string | null;
   currency: string | null;
+  usage_days_per_unit: number;
+  usage_is_custom: boolean;
 };
 
 export type InventoryItem = {
@@ -54,6 +56,8 @@ export type InventoryItem = {
   unit: string;
   product: Product;
   source: ProductSource;
+  usage_days_per_unit: number;
+  estimated_supply_days: number;
 };
 
 export type ReorderSuggestion = {
@@ -156,7 +160,15 @@ export const api = {
       method: "PATCH",
       body: JSON.stringify({ is_favorite: isFavorite }),
     }),
-  updateProduct: (token: string, productId: string, payload: { tags: string[] }) =>
+  updateProduct: (
+    token: string,
+    productId: string,
+    payload: {
+      tags?: string[];
+      usage_days_per_unit?: number;
+      usage_is_custom?: boolean;
+    },
+  ) =>
     request<Product>(`/products/${productId}`, token, {
       method: "PATCH",
       body: JSON.stringify(payload),

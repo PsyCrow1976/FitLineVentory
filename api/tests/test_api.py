@@ -116,3 +116,18 @@ def test_product_inventory_flow() -> None:
     assert any(p["country_code"] == "DK" for p in all_products.json())
 
     client.patch("/api/v1/auth/profile", json={"default_country_code": "DK"}, headers=headers)
+
+    usage_update = client.patch(
+        f"/api/v1/products/{product_id}",
+        json={"usage_is_custom": True, "usage_days_per_unit": 14},
+        headers=headers,
+    )
+    assert usage_update.status_code == 200
+    assert usage_update.json()["usage_is_custom"] is True
+    assert usage_update.json()["usage_days_per_unit"] == 14
+
+    inventory = client.get("/api/v1/inventory", headers=headers)
+    assert inventory.status_code == 200
+    stocked = next(i for i in inventory.json() if i["product_id"] == product_id)
+    assert stocked["usage_days_per_unit"] == 14
+    assert stocked["estimated_supply_days"] == 56

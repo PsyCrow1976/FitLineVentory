@@ -19,19 +19,24 @@ from app.schemas import (
 )
 from app.services import inventory as inventory_service
 from app.services.country import effective_country_code
+from app.services.products import to_product_read
+from app.services.usage import effective_usage_days, estimated_supply_days
 
 router = APIRouter(prefix="/inventory", tags=["inventory"])
 
 
 def serialize_inventory_item(item: InventoryItem) -> InventoryItemRead:
+    usage_days = effective_usage_days(item.product)
     return InventoryItemRead(
         id=item.id,
         product_id=item.product_id,
         quantity_on_hand=item.quantity_on_hand,
         unit=item.unit,
         updated_at=item.updated_at,
-        product=ProductRead.model_validate(item.product),
+        product=to_product_read(item.product),
         source=ProductSourceRead.model_validate(item.product.source),
+        usage_days_per_unit=usage_days,
+        estimated_supply_days=estimated_supply_days(item.quantity_on_hand, usage_days),
     )
 
 

@@ -94,10 +94,14 @@ class ProductRead(BaseModel):
     source_name: str | None = None
     country_code: str | None = None
     currency: str | None = None
+    usage_days_per_unit: int = 30
+    usage_is_custom: bool = False
 
 
 class ProductUpdate(BaseModel):
     tags: list[str] | None = None
+    usage_days_per_unit: int | None = Field(default=None, ge=1, le=3650)
+    usage_is_custom: bool | None = None
 
 
 class FavoriteUpdate(BaseModel):
@@ -120,6 +124,8 @@ class InventoryItemRead(BaseModel):
     updated_at: datetime
     product: ProductRead
     source: ProductSourceRead
+    usage_days_per_unit: int = 30
+    estimated_supply_days: int = 0
 
 
 class CheckInRequest(BaseModel):
